@@ -258,8 +258,10 @@ def _normalize_cell(cell: dict, kind: str) -> None:
 # --------------------------------------------------------------------------
 # public entry
 # --------------------------------------------------------------------------
-def extract(pdf_path: str, feedback: Optional[str] = None) -> dict:
-    active = S.load_schema(os.path.join(ROOT, "config", "active.schema.json"))
+def extract(pdf_path: str, feedback: Optional[str] = None, schema: Optional[dict] = None) -> dict:
+    # `schema` lets a caller (e.g. router.py) extract against a chosen schema
+    # without mutating config/active.schema.json; defaults to the active schema.
+    active = schema or S.load_schema(os.path.join(ROOT, "config", "active.schema.json"))
     doc_text = pdftext.full_text(pdf_path)
     user = build_user_prompt(active, doc_text, feedback)
     env = call_model(user)

@@ -104,9 +104,12 @@ def _append_note(line: str) -> None:
 # --------------------------------------------------------------------------
 # the per-document loop
 # --------------------------------------------------------------------------
-def process_doc(pdf_path: str, force: bool = False, verbose: bool = True) -> dict:
+def process_doc(pdf_path: str, force: bool = False, verbose: bool = True,
+                schema: Optional[dict] = None) -> dict:
     doc_id = _doc_id(pdf_path)
-    active = S.load_schema(os.path.join(ROOT, "config", "active.schema.json"))
+    # `schema` (from router.py) extracts against a chosen schema without mutating
+    # config/active.schema.json — avoids racy per-doc `cp` of the active file.
+    active = schema or S.load_schema(os.path.join(ROOT, "config", "active.schema.json"))
     answer_key = V._answer_key()
     is_labeled = (doc_id + ".pdf") in answer_key.get("accuracy_set", {})
 
@@ -122,7 +125,7 @@ def process_doc(pdf_path: str, force: bool = False, verbose: bool = True) -> dic
     for attempt in range(1, MAX_RETRIES + 1):
         if verbose:
             print(f"  [extract] {doc_id} (attempt {attempt}) — invoking model …")
-        env = extract.extract(pdf_path, feedback=feedback)
+        env = extract.extract(pdf_path, feedback=feedback, schema=active)
 
         review_any, flagged = _needs_review_any(env, active)
         status = "review" if review_any else "indexed"
@@ -229,14 +232,39 @@ def _pdfs(doc: Optional[str]) -> List[str]:
     return sorted(glob.glob(os.path.join(INBOX, "*.pdf")))
 
 
-def run_once(doc: Optional[str], force: bool) -> bool:
+def _process_routed(pdf: str, force: bool, verbose: bool = True) -> dict:
+    """Router-driven: classify the doc, select its schema, extract against it —
+    so a MIXED inbox is each doc extracted against the right schema with no
+    manual config swap. Unknown/low-confidence types park in review-queue/
+    (never auto-onboard)."""
+    import router
+    doc_id = _doc_id(pdf)
+    selected, dec = router.route_one(pdf)
+    if selected is None:
+        if verbose:
+            print(f"  [route] {doc_id}: no confident schema match "
+                  f"(type={dec['document_type']!r}, conf={dec['confidence']}) → review-queue")
+        record = {
+            "doc_id": doc_id, "source_pdf": _rel(pdf), "schema_title": None,
+            "attempts": 0, "routing": {k: dec[k] for k in ("document_type", "line_of_business", "confidence")},
+            "extraction": dec["routing_envelope"],
+        }
+        _remove_existing(doc_id)
+        _write_json(os.path.join(REVIEW, doc_id + ".json"), record)
+        return {"doc_id": doc_id, "pass": False, "run_ok": True, "status": "review", "unrouted": True}
+    if verbose:
+        print(f"  [route] {doc_id} → {dec['schema_title']} (type={dec['document_type']}, conf={dec['confidence']})")
+    return process_doc(pdf, force=force, verbose=verbose, schema=selected)
+
+
+def run_once(doc: Optional[str], force: bool, route: bool = False) -> bool:
     print("=" * 72)
-    print("WORKFLOW — code-held loop (orchestration-brief.md §6)")
+    print("WORKFLOW — code-held loop (orchestration-brief.md §6)" + ("  [--route]" if route else ""))
     print("=" * 72)
     reports = []
     for pdf in _pdfs(doc):
         print(f"\n• {os.path.basename(pdf)}")
-        reports.append(process_doc(pdf, force=force))
+        reports.append(_process_routed(pdf, force) if route else process_doc(pdf, force=force))
     ok = all(r.get("run_ok", r.get("pass")) for r in reports)
     print("\n" + "-" * 72)
     print(f"processed {len(reports)} doc(s); {'all passed / correctly queued' if ok else 'some FAILED'}")
@@ -265,12 +293,14 @@ def main():
     ap.add_argument("--doc", help="process a single PDF (stem or filename)")
     ap.add_argument("--watch", action="store_true", help="watch inbox/ continuously")
     ap.add_argument("--force", action="store_true", help="re-process already-indexed docs")
+    ap.add_argument("--route", action="store_true",
+                    help="classify each doc and auto-select its schema (mixed inbox, no config swap)")
     args = ap.parse_args()
     os.makedirs(WORK, exist_ok=True)
     if args.watch:
         watch()
     else:
-        ok = run_once(args.doc, args.force)
+        ok = run_once(args.doc, args.force, route=args.route)
         raise SystemExit(0 if ok else 1)
 
 

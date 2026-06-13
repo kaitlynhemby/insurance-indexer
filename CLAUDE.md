@@ -13,6 +13,7 @@ the pipeline to any document type. Synthetic corpus; all code original.
 - `workflow.py` — the **code-held loop**: per doc → load notes → extract (model) → verify → route to `index/` or `review-queue/` → on fail feed verifier reasons back and retry (≤3). Checkpoints to disk.
 - `pdftext.py` / `normalize.py` / `schema_util.py` — shared: one PDF→text path for builder + grader (OCR fallback for image-only pages), ISO/integer normalization, schema walker.
 - `viewer.py` → `viewer/index.html` — thin record viewer (field + source span + verifier report + diff). Not a dashboard.
+- `router.py` — pre-extraction **schema selector**: classifies an inbound PDF's `document_type` (grounded) and picks the matching `config/*.schema.json` so a MIXED inbox is each doc extracted against the right schema with no manual config swap. A thin stage reusing `extract.call_model` + the envelope shape — not an agent. `workflow.py --route` uses it; `router.py --grade` accuracy-checks the selection against `answer-key.json` `routing_set`. Unknown/low-confidence types park in `review-queue/` (never auto-onboard).
 - `schema_agent.py` + `channels/` — the **config-authoring agent**: designs/edits `config/<DocType>.schema.json` for what an insurer needs to collect, asks the insurer about gaps over a pluggable channel (console default; `discord` via REST+polling; `whatsapp` stretch stub), validates, activates, and re-runs the pipeline to self-verify. Builder-side only — never queries the index.
 
 ## Run
@@ -23,6 +24,8 @@ python verifier.py        # exits 0 when DONE
 python viewer.py --serve  # http://localhost:8000
 python schema_agent.py onboard "<doc-type desc>" --samples <dir> [--channel discord] [--keep]
 python schema_agent.py review --samples <dir>        # data-driven gap pass on the active schema
+python workflow.py --route                           # classify each inbox doc + auto-select its schema (mixed inbox)
+python router.py --grade                             # routing accuracy gate (exits 0 on pass)
 python tests/test_schema_lint.py                     # authored-schema guard unit checks
 ```
 

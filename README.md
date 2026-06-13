@@ -34,10 +34,14 @@ pip install pdfplumber jsonschema pytesseract pdf2image
 # system packages: tesseract, poppler  (only needed for the one scanned PDF)
 
 python workflow.py          # process inbox/ once: extract -> verify -> route to index/ or review-queue/
+python workflow.py --route  # classify each doc + auto-select its schema (mixed inbox, no config swap)
 python workflow.py --watch  # or watch inbox/ continuously and index documents as they arrive
 python verifier.py          # independent grader; exits 0 when DONE
+python router.py --grade    # routing accuracy gate (exits 0 when every doc selects the right schema)
 python viewer.py --serve    # thin record viewer at http://localhost:8000 (source span per field, verifier report, diff)
 ```
+
+**Mixed inbox, no manual swap:** `workflow.py --route` runs `router.py` first to classify each PDF's `document_type` (grounded in the text) and auto-select the matching schema — so an insurer can send a mix of COIs, FNOLs, and binders and each is extracted against the right schema. The routing decision is itself accuracy-graded (`router.py --grade` vs `answer-key.json`'s `routing_set`); unknown types park in `review-queue/`.
 
 **Deploy the viewer** (static, no build): `viewer.py` writes a self-contained `viewer/index.html`. It's deployed to Vercel at the live URL above via `vercel deploy ./viewer --prod`. To redeploy after re-indexing: `python viewer.py` then `vercel deploy ./viewer --prod --scope <your-scope>`.
 

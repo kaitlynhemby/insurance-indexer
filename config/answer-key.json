@@ -209,5 +209,17 @@
         ]
       }
     }
+  },
+  "routing_set": {
+    "_comment": "Ground truth for the pre-extraction router (router.py --grade). Each inbound PDF must classify to this document_type and select this schema, so a mixed inbox is extracted against the right schema with no manual config swap.",
+    "COI-1001_Harborview.pdf":         { "document_type": "certificate_of_insurance", "schema_title": "CertificateOfInsurance" },
+    "COI-1001_Harborview_UPDATED.pdf": { "document_type": "certificate_of_insurance", "schema_title": "CertificateOfInsurance" },
+    "COI-1002_Sierra.pdf":             { "document_type": "certificate_of_insurance", "schema_title": "CertificateOfInsurance" },
+    "COI-1003_Lumen.pdf":              { "document_type": "certificate_of_insurance", "schema_title": "CertificateOfInsurance" },
+    "COI-SCAN_Pinecrest.pdf":          { "document_type": "certificate_of_insurance", "schema_title": "CertificateOfInsurance" },
+    "FNOL-2001_Harborview.pdf":        { "document_type": "first_notice_of_loss",     "schema_title": "FirstNoticeOfLoss" },
+    "FNOL-2002_Sierra.pdf":            { "document_type": "first_notice_of_loss",     "schema_title": "FirstNoticeOfLoss" },
+    "BINDER-3001_Harborview.pdf":      { "document_type": "insurance_binder",         "schema_title": "InsuranceBinder" },
+    "BINDER-3002_Lumen.pdf":           { "document_type": "insurance_binder",         "schema_title": "InsuranceBinder" }
   }
 }
