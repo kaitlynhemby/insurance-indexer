@@ -5,7 +5,7 @@ every field traces to a verbatim source span, low-confidence fields self-route t
 review queue, updates reconcile with a field-level diff, and one config file re-targets
 the pipeline to any document type. Synthetic corpus; all code original.
 
-**Live viewer:** https://viewer-puce-phi.vercel.app (Vercel, static — see Deploy below).
+**Live demo console:** https://viewer-puce-phi.vercel.app — mock email inbox → click → pipeline-run → verified record with source spans → click a span to highlight it in the PDF → live config-agent chat (see Deploy below).
 
 ## Spine
 - `extract.py` — one PDF → extraction envelope `{value, confidence, source span, needs_review}`, keyed to `config/active.schema.json`. **Schema-agnostic** (no field names hardcoded).
@@ -33,7 +33,10 @@ python tests/test_schema_lint.py && python tests/test_profiles.py   # guard + pr
 ```
 
 ## Deploy
-The viewer is a self-contained static `viewer/index.html` (records embedded at generation time — no build, no server). Deployed to Vercel: `python viewer.py` then `vercel deploy ./viewer --prod --yes --scope <scope> --token=$VERCEL_TOKEN`. New Vercel projects enable Deployment Protection (Vercel Authentication) by default → the URL 401s for the public; disable it via `PATCH /v9/projects/<id>` with `{"ssoProtection": null}` (done for the live project). `.vercel/` is gitignored.
+`python viewer.py` regenerates `viewer/index.html` (records + synthetic emails embedded) and copies the source PDFs into `viewer/pdfs/`. The deploy root is `viewer/`: static page + bundled PDFs + **`viewer/api/chat.js`** (a Vercel Node serverless function for the live config-agent chat). Deploy: `vercel deploy ./viewer --prod --yes --scope <scope> --token=$VERCEL_TOKEN`.
+- **The chat needs `ANTHROPIC_API_KEY` in the Vercel project env** (server-side, never in the client). The CLI's non-interactive `env add` is flaky here — set it via the REST API: `POST https://api.vercel.com/v10/projects/<id>/env?teamId=<team>&upsert=true` with `{"key":"ANTHROPIC_API_KEY","value":...,"type":"encrypted","target":["production","preview","development"]}`. Env applies to the NEXT deploy.
+- New Vercel projects enable Deployment Protection by default → the URL 401s for the public; disable via `PATCH /v9/projects/<id>` with `{"ssoProtection": null}` (done). `.vercel/` and `viewer/*.png` are gitignored.
+- The viewer demo console = the story end to end: mock email INBOX → click → pipeline-run animation → RECORD with each field's source span → click a span to see it highlighted in the actual PDF (PDF.js) → "Configure" chat drawer (live `/api/chat`). The chat is the config-authoring agent ONLY — never "chat with your index" (anti-scope).
 
 ## Non-obvious constraints (read before editing)
 - **Model invocation:** `workflow.py`→`extract.py` calls the model **per document** via the local `claude` CLI in headless `-p` mode (no API key — same login as Claude Code). **Do NOT use the `--json-schema` flag — it hangs when `claude -p` runs nested inside a Claude Code session.** `extract.py` parses the first JSON object from the response instead. Optional faster/deterministic path: set `ANTHROPIC_API_KEY` in `.env` (loaded by `extract.py`) → uses the `anthropic` SDK. Model id `claude-opus-4-8`; on 4.8 the API rejects `temperature`/`top_p`/`top_k` (400) — don't add them.

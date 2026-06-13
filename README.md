@@ -2,7 +2,7 @@
 
 Built during the Build Day event using **Claude Code + Claude Opus 4.8**.
 
-**🔗 Live record viewer:** https://viewer-puce-phi.vercel.app — the verified index, each field beside its source span, the verifier's gate report, and the reconciliation diff.
+**🔗 Live demo:** https://viewer-puce-phi.vercel.app — a mock email **inbox** (PDFs arrive) → click one to watch it run the pipeline → a **verified record** with every field beside its source span → click a span to see it **highlighted in the actual PDF** → a live **chat** to configure the pipeline for any insurer (the config-authoring agent; not a chat-with-your-data box).
 
 **What it does:** turns emailed insurance PDFs (certificates of insurance, first-notice-of-loss packets) into structured, verified records. Every field traces back to its source span, low-confidence fields route themselves to a human review queue, the index updates and re-verifies as new documents arrive, and a single config file re-targets the whole pipeline to any insurance document type.
 
