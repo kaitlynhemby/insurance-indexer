@@ -102,6 +102,40 @@
       "claimant_name": "N/A (first-party)",
       "reported_by": "Elena Cruz (Site Supervisor)",
       "estimated_severity": "high"
+    },
+    "BINDER-3001_Harborview.pdf": {
+      "document_type": "insurance_binder",
+      "insured_name": "Harborview Logistics LLC",
+      "producing_agency": "Brightline Insurance Brokers",
+      "insurer_name": "Pacific Crest Mutual Ins Co",
+      "policy_number": "GL-88421",
+      "binder_effective_date": "2026-06-15",
+      "binder_expiration_date": "2026-07-15",
+      "coverage_type": "general_liability",
+      "coverage_limit": 2000000,
+      "estimated_premium": 4250,
+      "binder_number": "BND-2026-3001",
+      "insurer_naic_number": "27812",
+      "aggregate_limit": 4000000,
+      "binder_effective_time": "12:01 AM",
+      "authorized_representative": "Renee Alvarado"
+    },
+    "BINDER-3002_Lumen.pdf": {
+      "document_type": "insurance_binder",
+      "insured_name": "Lumen Tech Services",
+      "producing_agency": "Anchor Risk Partners",
+      "insurer_name": "Beacon Professional Indemnity",
+      "policy_number": "PL-11920",
+      "binder_effective_date": "2026-06-20",
+      "binder_expiration_date": "2026-07-20",
+      "coverage_type": "professional_liability",
+      "coverage_limit": 3000000,
+      "estimated_premium": 7900,
+      "binder_number": "BND-2026-3002",
+      "insurer_naic_number": "41209",
+      "aggregate_limit": 6000000,
+      "binder_effective_time": "12:01 AM",
+      "authorized_representative": "David Okafor"
     }
   },
   "update_expectations": {

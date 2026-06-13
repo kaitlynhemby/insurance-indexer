@@ -69,10 +69,6 @@
     },
     "authorized_representative": {
       "type": "string"
-    },
-    "issue_date": {
-      "type": "string",
-      "format": "date"
     }
   }
 }
