@@ -139,5 +139,14 @@
       },
       "needs_review": false
     }
+  },
+  "routing": {
+    "document_type": "insurance_binder",
+    "line_of_business": "professional_liability",
+    "profile": "harborview-mga",
+    "insurer": "Harborview Mutual MGA",
+    "market_type": "admitted",
+    "department": "CL",
+    "agency_code": "ANC-220"
   }
 }

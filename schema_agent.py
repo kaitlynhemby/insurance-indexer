@@ -28,6 +28,7 @@ from typing import Dict, List, Optional, Tuple
 
 import extract            # reused model invocation (loads .env on import)
 import pdftext            # reused PDF -> text
+import profiles           # per-insurer process profiles
 import schema_util as S   # reused schema walk + the authored-schema guards
 import verifier as V      # reused gate grading
 import workflow           # reused per-document indexing
@@ -53,6 +54,14 @@ SYSTEM_AUTHOR_INTERPRET = (
     "schema. A reply may confirm, decline, rename the field, and/or change its type. Do not use "
     "tools, do not explain. Respond with ONLY a single JSON object."
 )
+SYSTEM_AUTHOR_PROFILE = (
+    "You author a per-insurer ROUTING PROFILE for an insurance document indexer: the department "
+    "codes, line-of-business -> department taxonomy, admitted/surplus market type, and a (mock) "
+    "agency-code map an insurer uses to triage inbound documents. Do not use tools, do not explain. "
+    "Respond with ONLY a single JSON object."
+)
+PROFILE_LOBS = ["general_liability", "auto_liability", "umbrella", "professional_liability",
+                "property", "workers_comp"]
 
 SUPPORTED_SHAPE_RULES = (
     "SUPPORTED SCHEMA SHAPE (draft-07) — you MUST stay strictly within it:\n"
@@ -542,6 +551,83 @@ def review(samples_dir: Optional[str], channel_name: str) -> int:
     return 0 if res["pass"] else 1
 
 
+def _draft_profile(insurer_id: str, description: str, sample_texts, feedback=None) -> dict:
+    user = "\n".join([
+        f"Author a routing profile for insurer_id '{insurer_id}'.",
+        f"DESCRIPTION: {description}",
+        "",
+        "Return ONE JSON object with EXACTLY these keys:",
+        '{"insurer_id": "<id>", "display_name": "...", "market_type": "admitted"|"surplus", '
+        '"departments": ["CODE", ...], "lob_taxonomy": {<lob>: "<dept code from departments>"}, '
+        '"default_department": "<one of departments>", "agency_codes": {"<producer name>": "<code>"}}',
+        f"lob_taxonomy keys MUST be drawn from: {PROFILE_LOBS} (map every one to a department code). "
+        "departments are the insurer's internal desk codes (e.g. CL, PROP, SPEC, CAS, WC). "
+        "agency_codes is a SYNTHETIC/MOCK lookup from producer/agency names seen in the samples to "
+        "made-up internal codes.",
+        "",
+        "SAMPLE DOCUMENT TEXT (for producer names + line-of-business cues), if any:",
+        _samples_block(sample_texts),
+    ])
+    if feedback:
+        user += "\n\nThe previous attempt was INVALID. Fix exactly these and resend the full object:\n" + feedback
+    return extract.call_model(user, SYSTEM_AUTHOR_PROFILE)
+
+
+def profile_cmd(insurer_id: str, description: str, samples_dir: Optional[str],
+                channel_name: str, activate: bool) -> int:
+    channel = get_channel(channel_name)
+    samples = _list_pdfs(samples_dir)
+    sample_texts = _sample_texts(samples)
+    channel.send(f"Setting up a routing profile for {insurer_id}. I'll propose how your inbound "
+                 "documents should be triaged and confirm the details with you.")
+
+    print("• drafting profile (invoking model) …")
+    feedback, prof = None, None
+    for attempt in range(1, MAX_RETRIES + 1):
+        draft = _draft_profile(insurer_id, description, sample_texts, feedback)
+        draft["insurer_id"] = insurer_id  # authoritative
+        violations = profiles.lint_profile(draft)
+        if not violations:
+            prof = draft
+            break
+        print(f"  [profile retry {attempt}] invalid: {violations}")
+        feedback = "\n".join(f"- {v}" for v in violations)
+    if not prof:
+        channel.send("I couldn't produce a valid profile; nothing was changed.")
+        return 1
+
+    # confirm the key axes over the channel
+    summary = (f"Proposed profile for {prof['display_name']} ({prof['market_type']} market): "
+               f"departments {prof['departments']}; routing e.g. "
+               + ", ".join(f"{k}→{v}" for k, v in list(prof['lob_taxonomy'].items())[:4])
+               + f"; default {prof.get('default_department')}.")
+    reply = channel.ask(summary + " Does this match your setup? (yes, or describe corrections)",
+                        timeout=CHANNEL_TIMEOUT)
+    if reply and not _affirmative(reply):
+        print("  [profile] applying correction …")
+        prof2 = _draft_profile(insurer_id, description + "\nINSURER CORRECTION: " + reply, sample_texts)
+        prof2["insurer_id"] = insurer_id
+        if not profiles.lint_profile(prof2):
+            prof = prof2
+
+    path = profiles.profile_path(insurer_id)
+    os.makedirs(profiles.PROFILES_DIR, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(prof, fh, indent=2)
+    os.replace(tmp, path)
+    print(f"• wrote {os.path.relpath(path, ROOT)}")
+    channel.send(f"Saved the {prof['display_name']} profile (departments {prof['departments']}).")
+
+    if activate:
+        profiles.activate(insurer_id)
+        import router
+        router.annotate(insurer_id, verbose=False)
+        channel.send(f"Activated {prof['display_name']} — inbound documents now route to its desks.")
+        print(f"• activated + annotated records with {insurer_id}")
+    return 0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Config-authoring agent for the insurance indexer")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -556,11 +642,20 @@ def main() -> None:
     rv.add_argument("--samples", required=True, help="dir (or single .pdf) of sample documents to analyze")
     rv.add_argument("--channel", default="console", help="console | discord | whatsapp")
 
+    pf = sub.add_parser("profile", help="author a per-insurer routing profile (departments, LOB→dept, agency codes)")
+    pf.add_argument("insurer_id", help="short id, e.g. acme-mga")
+    pf.add_argument("description", help="description of the insurer's process (market, departments, lines)")
+    pf.add_argument("--samples", help="dir (or single .pdf) of their documents, to seed producer/agency codes")
+    pf.add_argument("--channel", default="console", help="console | discord | whatsapp")
+    pf.add_argument("--activate", action="store_true", help="activate the profile + annotate records after authoring")
+
     args = ap.parse_args()
     if args.cmd == "onboard":
         sys.exit(onboard(args.description, args.samples, args.channel, args.keep))
-    else:
+    elif args.cmd == "review":
         sys.exit(review(args.samples, args.channel))
+    else:
+        sys.exit(profile_cmd(args.insurer_id, args.description, args.samples, args.channel, args.activate))
 
 
 if __name__ == "__main__":

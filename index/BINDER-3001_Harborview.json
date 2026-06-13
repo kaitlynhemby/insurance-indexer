@@ -139,5 +139,14 @@
       },
       "needs_review": false
     }
+  },
+  "routing": {
+    "document_type": "insurance_binder",
+    "line_of_business": "general_liability",
+    "profile": "harborview-mga",
+    "insurer": "Harborview Mutual MGA",
+    "market_type": "admitted",
+    "department": "CL",
+    "agency_code": "BRT-114"
   }
 }

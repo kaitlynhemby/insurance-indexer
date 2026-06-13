@@ -1,0 +1,20 @@
+{
+  "insurer_id": "harborview-mga",
+  "display_name": "Harborview Mutual MGA",
+  "market_type": "admitted",
+  "departments": ["CL", "PROP", "WC"],
+  "lob_taxonomy": {
+    "general_liability": "CL",
+    "auto_liability": "CL",
+    "umbrella": "CL",
+    "professional_liability": "CL",
+    "property": "PROP",
+    "workers_comp": "WC"
+  },
+  "default_department": "CL",
+  "agency_codes": {
+    "Brightline Insurance Brokers": "BRT-114",
+    "Anchor Risk Partners": "ANC-220"
+  },
+  "_comment": "Synthetic admitted-market MGA. agency_codes are MOCK internal codes; a real deployment would resolve these against the agency-management system."
+}

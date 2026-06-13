@@ -1,0 +1,20 @@
+{
+  "insurer_id": "sierra-surplus",
+  "display_name": "Sierra Surplus & Specialty Brokers",
+  "market_type": "surplus",
+  "departments": ["CAS", "SPEC", "PROP"],
+  "lob_taxonomy": {
+    "general_liability": "CAS",
+    "auto_liability": "CAS",
+    "umbrella": "SPEC",
+    "professional_liability": "SPEC",
+    "property": "PROP",
+    "workers_comp": "CAS"
+  },
+  "default_department": "CAS",
+  "agency_codes": {
+    "Brightline Insurance Brokers": "BRI-7781",
+    "Anchor Risk Partners": "ANC-3390"
+  },
+  "_comment": "Synthetic surplus-lines (E&S) wholesaler. Routes professional/umbrella to a Specialty desk (SPEC) where the admitted MGA keeps everything in CL — the same doc, different routing. agency_codes are MOCK."
+}

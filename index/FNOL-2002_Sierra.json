@@ -103,5 +103,14 @@
       },
       "needs_review": false
     }
+  },
+  "routing": {
+    "document_type": "first_notice_of_loss",
+    "line_of_business": "property",
+    "profile": "harborview-mga",
+    "insurer": "Harborview Mutual MGA",
+    "market_type": "admitted",
+    "department": "PROP",
+    "agency_code": null
   }
 }
