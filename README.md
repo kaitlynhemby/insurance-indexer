@@ -43,5 +43,17 @@ The model is invoked **per document** by `workflow.py`. By default it uses the l
 
 **Re-target to a new document type with no code change:** `cp config/fnol.schema.json config/active.schema.json`, then drop that doc type into `inbox/`.
 
+## Configure what to collect (the schema-authoring agent)
+The schema config doesn't have to be hand-written. `schema_agent.py` is an agent that **designs the config for what an insurer needs to collect**: it proposes a complete field set for a doc type, scans sample PDFs to flag salient data it isn't yet capturing, and **chats with the insurer to confirm the gaps** before applying them — then validates the schema, activates it, and re-runs the pipeline to prove it works.
+```bash
+# Author a NEW doc type from a description + sample PDFs (asks you about uncertain fields)
+python schema_agent.py onboard "Insurance binder: insured, carrier, policy number, effective/expiration dates, coverage + limit, premium" \
+    --samples samples_binder --channel console [--keep]
+# Data-driven gap pass on the ACTIVE schema: "what recurring data am I missing?"
+python schema_agent.py review --samples <dir-of-pdfs> --channel console
+```
+- It chats over a **pluggable channel** — `console` (offline default), `discord` (set `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID` in `.env`), or `whatsapp` (Twilio, a documented stretch). See `.env.example`.
+- It's **builder-side**: it authors `config/<DocType>.schema.json` and re-runs the existing pipeline — it never queries the index. Generated schemas are linted against the supported shape and round-tripped through the pipeline before activation (`schema_util.lint_authored_schema`); nothing is written or activated unless it passes. A freshly-authored type self-verifies on gates 1–4 (no answer-key needed). By default `onboard` restores `active=COI` and removes the sample records afterward, leaving only the new `config/*.schema.json`; `--keep` leaves it live for the viewer.
+
 ## "Done" is verifiable without a human
 `verifier.py` exits `0` on the labeled held-out set: 100% grounded, 100% schema-valid, accuracy == 100%, and every low-confidence field correctly routed to `review-queue/`. Re-target to a new document type by replacing `config/active.schema.json` — no code change.

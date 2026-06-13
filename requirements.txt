@@ -1,5 +1,13 @@
 pdfplumber>=0.11
 jsonschema>=4.0
+requests>=2.31          # config agent's Discord channel (REST + polling)
 # OCR (only needed for the one image-only scan): also requires system `tesseract` + `poppler`
 pytesseract>=0.3.10
 pdf2image>=1.17
+# Optional: Anthropic API path (else the local `claude` CLI is used)
+# anthropic>=0.40
+# Generating sample PDFs for a new doc type (samples_binder/make_samples.py)
+# fpdf2>=2.8
+# Config agent WhatsApp channel (STRETCH only)
+# twilio>=8.0
+# flask>=3.0

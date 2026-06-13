@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsuranceBinder",
+  "x_natural_key": "policy_number",
+  "type": "object",
+  "required": [
+    "document_type",
+    "insured_name",
+    "producing_agency",
+    "insurer_name",
+    "policy_number",
+    "binder_effective_date",
+    "binder_expiration_date",
+    "coverage_type"
+  ],
+  "properties": {
+    "document_type": {
+      "const": "insurance_binder"
+    },
+    "insured_name": {
+      "type": "string"
+    },
+    "producing_agency": {
+      "type": "string"
+    },
+    "insurer_name": {
+      "type": "string"
+    },
+    "policy_number": {
+      "type": "string"
+    },
+    "binder_effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "binder_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "coverage_type": {
+      "type": "string",
+      "enum": [
+        "general_liability",
+        "auto_liability",
+        "umbrella",
+        "workers_comp",
+        "property",
+        "professional_liability",
+        "other"
+      ]
+    },
+    "coverage_limit": {
+      "type": "number"
+    },
+    "estimated_premium": {
+      "type": "number"
+    },
+    "binder_number": {
+      "type": "string"
+    },
+    "insurer_naic_number": {
+      "type": "string"
+    },
+    "aggregate_limit": {
+      "type": "number"
+    },
+    "binder_effective_time": {
+      "type": "string"
+    },
+    "authorized_representative": {
+      "type": "string"
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date"
+    }
+  }
+}
