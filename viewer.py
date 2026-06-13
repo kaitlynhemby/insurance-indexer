@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""viewer.py — generate a thin, self-contained record viewer.
+"""viewer.py — generate a self-contained, editorial record viewer.
 
 Renders the ACTION, not a dashboard: for every indexed / review-queue record it
 shows each field's value beside its **verbatim source span** (the grounding
-proof), the fresh-context verifier's gate report, and — for an updated document
-— the field-level diff. Output is a single static HTML file that opens directly
-(file://) or over `python -m http.server`.
+proof), the fresh-context verifier's gate report, the field-level diff on an
+updated document, and the per-insurer routing decision. Doc-type filtering makes
+the config-swap / router story visible (Certificate of Insurance · FNOL ·
+Binder, one pipeline). Output is a single static HTML file — no build, no
+server — deployable to Vercel.
 
   python viewer.py            # writes viewer/index.html
   python viewer.py --serve    # writes it and serves at http://localhost:8000
@@ -48,148 +50,257 @@ _TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verified Insurance Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#f4f2ec; --card:#fffdf8; --ink:#23282c; --muted:#6b7177;
-    --line:#e2ddd1; --verified:#0f6e5f; --review:#b4690e; --fail:#b3261e;
-    --span:#fbf6e9; --spanline:#ead9b0; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --paper:#efe9db; --paper2:#e7dfcd; --sheet:#fbf8f0; --ink:#211e18; --muted:#736a59;
+    --rule:#d8cfba; --line:#e4dccb;
+    --verified:#1d6b53; --verified-bg:#1d6b531a; --review:#a8620a; --review-bg:#a8620a1a;
+    --fail:#9e2b25; --fail-bg:#9e2b251a; --accent:#7c3b27;
+    --evidence:#f5edd9; --evidence-line:#e2cf9f; --evidence-ink:#5c4a25;
+    --serif:"Fraunces",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);
-       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-serif;
-       line-height:1.5;font-size:15px}
-  header{padding:30px 32px 18px;border-bottom:1px solid var(--line)}
-  h1{margin:0;font-size:22px;letter-spacing:-.01em}
-  header p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:70ch}
-  .layout{display:flex;align-items:flex-start}
-  nav{position:sticky;top:0;flex:0 0 250px;padding:22px 16px;border-right:1px solid var(--line);
-      height:100vh;overflow:auto}
-  nav a{display:flex;justify-content:space-between;gap:8px;align-items:center;
-        text-decoration:none;color:var(--ink);padding:8px 10px;border-radius:8px;font-size:14px}
-  nav a:hover{background:#0000000a}
-  main{flex:1;padding:24px 32px 80px;max-width:1000px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
-        padding:22px 24px;margin-bottom:26px;box-shadow:0 1px 2px #0000000a}
-  .card h2{margin:0;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .sub{color:var(--muted);font-size:13px;margin:4px 0 16px}
-  .chip{font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
-        padding:3px 9px;border-radius:999px;white-space:nowrap}
-  .c-indexed{background:#0f6e5f1a;color:var(--verified)}
-  .c-review{background:#b4690e1a;color:var(--review)}
-  .gates{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
-  .gate{font-size:11px;font-family:var(--mono);padding:3px 8px;border-radius:6px;border:1px solid var(--line)}
-  .g-pass{background:#0f6e5f12;color:var(--verified);border-color:#0f6e5f33}
-  .g-fail{background:#b3261e12;color:var(--fail);border-color:#b3261e33}
-  .g-na{background:#0000000a;color:var(--muted)}
-  .field{display:grid;grid-template-columns:200px 1fr;gap:14px;padding:13px 0;border-top:1px solid var(--line)}
-  .fname{font-weight:600;font-size:14px}
-  .fname .rev{display:inline-block;margin-top:5px;font-weight:600;font-size:10.5px;
-              color:var(--review);background:#b4690e1a;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
-  .val{font-family:var(--mono);font-size:14px;word-break:break-word}
-  .val.null{color:var(--muted);font-style:italic}
-  .conf{font-size:12px;color:var(--muted);margin-top:3px}
-  .bar{display:inline-block;width:84px;height:5px;border-radius:3px;background:#0000000f;vertical-align:middle;margin-right:7px;overflow:hidden}
-  .bar > i{display:block;height:100%;border-radius:3px}
-  .span{margin-top:9px;background:var(--span);border:1px solid var(--spanline);border-left:3px solid var(--review);
-        border-radius:6px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;color:#5a4a25}
-  .span .pg{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
-  .cov{margin:14px 0 4px;padding:14px 16px;background:#00000005;border:1px solid var(--line);border-radius:10px}
-  .cov h3{margin:0 0 4px;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
-  .diff{margin-top:18px;border:1px solid #b4690e44;border-radius:10px;overflow:hidden}
-  .diff .dh{background:#b4690e12;color:var(--review);font-weight:600;font-size:13px;padding:9px 14px}
-  .drow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center}
-  .drow code{font-family:var(--mono);font-size:12.5px}
-  .from{color:var(--fail);text-decoration:line-through}
+  html{scroll-behavior:smooth}
+  body{margin:0;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+       background:
+         radial-gradient(1200px 600px at 15% -5%, #f7f2e6 0%, transparent 55%),
+         radial-gradient(1000px 700px at 100% 0%, #efe7d6 0%, transparent 50%),
+         var(--paper);
+       background-attachment:fixed;}
+  /* faint paper grain */
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.035;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 28px 96px}
+
+  /* ---- masthead ---- */
+  header.mast{padding:54px 0 26px;border-bottom:2px solid var(--ink)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 14px}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(38px,6vw,68px);line-height:.98;
+    letter-spacing:-.02em;margin:0;font-optical-sizing:auto}
+  h1 em{font-style:italic;color:var(--accent)}
+  .dek{font-family:var(--serif);font-weight:400;font-size:clamp(16px,2vw,20px);font-style:italic;
+    color:var(--muted);max-width:62ch;margin:16px 0 0}
+  .stats{display:flex;flex-wrap:wrap;gap:0;margin:26px 0 0;border-top:1px solid var(--rule)}
+  .stat{padding:14px 26px 12px 0;margin-right:26px;border-right:1px solid var(--rule)}
+  .stat:last-child{border-right:none}
+  .stat b{display:block;font-family:var(--serif);font-size:26px;font-weight:600;line-height:1}
+  .stat span{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .stat.ok b{color:var(--verified)}
+
+  /* ---- filter bar ---- */
+  .filters{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding:16px 0;margin:0 0 8px;
+    background:linear-gradient(var(--paper),var(--paper) 70%,transparent);
+    backdrop-filter:blur(2px)}
+  .chip{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--rule);background:#fff8;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap}
+  .chip:hover{border-color:var(--ink);color:var(--ink)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .chip .ct{opacity:.6;margin-left:6px}
+
+  /* ---- record sheets ---- */
+  .sheet{position:relative;background:var(--sheet);border:1px solid var(--line);border-radius:4px;
+    padding:26px 30px 28px;margin:0 0 22px;box-shadow:0 1px 0 #fff inset, 0 18px 40px -34px #3a2f1a;
+    overflow:hidden;opacity:0;transform:translateY(14px);animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .sheet::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--verified)}
+  .sheet.review::before{background:var(--review)}
+  .sheet h2{font-family:var(--serif);font-weight:600;font-size:26px;letter-spacing:-.01em;margin:0;
+    display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .badge{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+    padding:4px 9px;border-radius:3px;white-space:nowrap}
+  .b-indexed{background:var(--verified-bg);color:var(--verified)}
+  .b-review{background:var(--review-bg);color:var(--review)}
+  .src{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:7px 0 0}
+  .type{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+
+  /* routing strip */
+  .routing{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0 4px;padding:10px 14px;
+    background:var(--paper2);border:1px solid var(--rule);border-radius:4px;font-family:var(--mono);font-size:12px}
+  .routing .k{color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-size:9.5px}
+  .routing .v{color:var(--ink);font-weight:500}
+  .routing .arrow{color:var(--accent)}
+  .routing .ins{margin-left:auto;color:var(--accent)}
+
+  /* gates */
+  .gates{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 6px}
+  .gate{font-family:var(--mono);font-size:10.5px;padding:4px 9px;border-radius:3px;border:1px solid transparent}
+  .g-pass{background:var(--verified-bg);color:var(--verified)}
+  .g-fail{background:var(--fail-bg);color:var(--fail)}
+  .g-na{background:#0000000c;color:var(--muted)}
+
+  /* fields */
+  .group-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:22px 0 2px;padding-top:14px;border-top:1px solid var(--line)}
+  .field{padding:13px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:190px 1fr;gap:18px}
+  .field:first-of-type{border-top:none}
+  .field.flag{background:linear-gradient(90deg,var(--review-bg),transparent 70%);
+    margin:0 -14px;padding:13px 14px;border-radius:4px;border-top:1px solid var(--review-bg)}
+  .fname{font-weight:600;font-size:13.5px;padding-top:1px}
+  .fname .rev{display:inline-block;margin-top:6px;font-family:var(--mono);font-size:9px;font-weight:500;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--review);background:var(--review-bg);
+    padding:3px 7px;border-radius:3px}
+  .val{font-family:var(--mono);font-size:15px;font-weight:500;word-break:break-word}
+  .val.nullv{color:var(--muted);font-style:italic;font-family:var(--serif);font-weight:400}
+  .meta{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .bar{flex:0 0 70px;height:4px;border-radius:2px;background:#0000000f;overflow:hidden}
+  .bar i{display:block;height:100%}
+  .conf{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .ev{margin-top:9px;background:var(--evidence);border:1px solid var(--evidence-line);
+    border-left:3px solid var(--review);border-radius:4px;padding:9px 12px;
+    font-family:var(--mono);font-size:12.5px;color:var(--evidence-ink);cursor:pointer;transition:.15s}
+  .ev:hover{border-left-color:var(--accent);background:#f1e6cc}
+  .ev .pg{display:block;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#9a8a5e;margin-bottom:4px}
+  .ev.hl{box-shadow:0 0 0 2px var(--evidence-line)}
+
+  /* diff */
+  .diff{margin:20px 0 2px;border:1.5px solid var(--accent);border-radius:5px;overflow:hidden}
+  .diff .dh{background:var(--accent);color:var(--paper);font-family:var(--mono);font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;padding:9px 14px}
+  .drow{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:11px 14px;
+    border-top:1px solid var(--line);font-family:var(--mono);font-size:13px}
+  .drow:first-of-type{border-top:none}
+  .drow code{font-family:var(--mono)}
+  .from{color:var(--fail);text-decoration:line-through;opacity:.8}
   .to{color:var(--verified);font-weight:600}
-  .reasons{margin-top:12px;font-size:12.5px;color:var(--muted)}
-  .reasons li{margin:2px 0}
-  footer{color:var(--muted);font-size:12px;padding:0 32px 40px;max-width:1000px}
+  .reasons{margin:14px 0 0;font-size:12.5px;color:var(--muted);padding-left:18px}
+  .reasons li{margin:3px 0;font-family:var(--mono)}
+
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);
+    font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.8}
+  footer a{color:var(--accent)}
+  .hide{display:none}
+  @media(max-width:640px){.field{grid-template-columns:1fr;gap:4px}}
 </style>
 </head>
 <body>
-<header>
-  <h1>Verified Insurance Index</h1>
-  <p>Every field traces to a verbatim source span. Low-confidence fields route themselves to the review queue. The index reconciles updated documents with a field-level diff. Graded by an independent verifier — <code>verifier.py</code> exits&nbsp;0.</p>
-</header>
-<div class="layout">
-  <nav id="nav"></nav>
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Self-Verifying Document Indexer</p>
+    <h1>Verified Insurance <em>Index</em></h1>
+    <p class="dek">Every field traces to a verbatim source span. Uncertain fields route themselves to review. Updates reconcile with a field-level diff. Each record is graded by an independent verifier — and the run is provably done.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <nav class="filters" id="filters"></nav>
   <main id="main"></main>
+
+  <footer id="foot"></footer>
 </div>
-<footer id="foot"></footer>
+
 <script>
 const RECORDS = /*DATA*/;
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isCell = v => v && typeof v === 'object' && 'value' in v && 'confidence' in v;
 const confColor = c => c >= 0.85 ? 'var(--verified)' : (c >= 0.5 ? 'var(--review)' : 'var(--fail)');
+const TYPE_LABEL = {CertificateOfInsurance:'Certificate of Insurance', FirstNoticeOfLoss:'First Notice of Loss', InsuranceBinder:'Insurance Binder'};
+const typeLabel = t => TYPE_LABEL[t] || t || 'Document';
+const fmtVal = v => v === null ? null : (typeof v === 'number' ? v.toLocaleString('en-US') : v);
 
+let uid = 0;
 function cellHTML(name, cell){
-  const v = cell.value;
+  const v = cell.value, flagged = cell.needs_review || v === null || (cell.confidence||0) < 0.85;
   const valHTML = v === null
-    ? `<span class="val null">null — not asserted</span>`
-    : `<span class="val">${esc(typeof v === 'number' ? v.toLocaleString('en-US') : v)}</span>`;
+    ? `<span class="val nullv">null — not asserted</span>`
+    : `<span class="val">${esc(fmtVal(v))}</span>`;
   const pct = Math.round((cell.confidence||0)*100);
-  const conf = `<div class="conf"><span class="bar"><i style="width:${pct}%;background:${confColor(cell.confidence)}"></i></span>confidence ${cell.confidence}</div>`;
+  const meta = `<div class="meta"><span class="bar"><i style="width:${pct}%;background:${confColor(cell.confidence)}"></i></span><span class="conf">conf ${cell.confidence}</span></div>`;
   const src = cell.source || {};
-  const span = src.text_span
-    ? `<div class="span"><span class="pg">source · page ${src.page}</span>“${esc(src.text_span)}”</div>` : '';
-  const rev = cell.needs_review ? `<div><span class="rev">needs review</span></div>` : '';
-  return `<div class="field"><div class="fname">${esc(name)}${rev}</div><div>${valHTML}${conf}${span}</div></div>`;
+  const id = 'ev'+(uid++);
+  const ev = src.text_span
+    ? `<div class="ev" id="${id}" onclick="this.classList.toggle('hl')"><span class="pg">source · page ${src.page}</span>&ldquo;${esc(src.text_span)}&rdquo;</div>` : '';
+  const rev = flagged ? `<div><span class="rev">needs review</span></div>` : '';
+  return `<div class="field${flagged?' flag':''}"><div class="fname">${esc(name)}${rev}</div><div>${valHTML}${meta}${ev}</div></div>`;
 }
 
-function recordHTML(rec){
-  const r = rec._report, st = rec._report.status;
-  const stChip = st === 'review'
-    ? `<span class="chip c-review">Review queue</span>`
-    : `<span class="chip c-indexed">Indexed · verified</span>`;
+function routingHTML(r){
+  if(!r) return '';
+  const dept = r.department ? `<span class="k">dept</span> <span class="v">${esc(r.department)}</span>` : '';
+  const agency = r.agency_code ? `<span class="arrow">·</span><span class="k">agency</span> <span class="v">${esc(r.agency_code)}</span>` : '';
+  const mkt = r.market_type ? `<span class="arrow">·</span><span class="k">market</span> <span class="v">${esc(r.market_type)}</span>` : '';
+  return `<div class="routing"><span class="k">routed</span> <span class="v">${esc(r.document_type||'')}</span> <span class="arrow">→</span> ${dept}${agency}${mkt}<span class="ins">${esc(r.insurer||'')}</span></div>`;
+}
+
+function recordHTML(rec, i){
+  const r = rec._report, review = r.status === 'review';
+  const badge = review ? `<span class="badge b-review">Review queue</span>` : `<span class="badge b-indexed">Indexed · verified</span>`;
   const gates = Object.entries(r.gates).map(([k,v])=>{
     const cls = v==='pass'?'g-pass':(v==='fail'?'g-fail':'g-na');
-    return `<span class="gate ${cls}">${k.replace('_',' ')}: ${v}</span>`;
+    return `<span class="gate ${cls}">${k.replace(/_/g,' ')} · ${v}</span>`;
   }).join('');
 
   let body = '';
-  for (const [k,val] of Object.entries(rec.extraction)){
-    if (isCell(val)) { body += cellHTML(k, val); continue; }
-    if (Array.isArray(val)){
-      val.forEach((cov,i)=>{
-        const label = (cov.coverage_type && cov.coverage_type.value) || `item ${i+1}`;
-        let inner = '';
-        for (const [sk,sc] of Object.entries(cov)) if (isCell(sc)) inner += cellHTML(sk, sc);
-        body += `<div class="cov"><h3>${esc(k)} — ${esc(label)}</h3>${inner}</div>`;
+  for(const [k,val] of Object.entries(rec.extraction)){
+    if(isCell(val)){ body += cellHTML(k, val); continue; }
+    if(Array.isArray(val)){
+      val.forEach((cov,ci)=>{
+        const label = (cov.coverage_type && cov.coverage_type.value) || ('item '+(ci+1));
+        let inner=''; for(const [sk,sc] of Object.entries(cov)) if(isCell(sc)) inner += cellHTML(sk, sc);
+        body += `<div class="group-h">${esc(k)} — ${esc(label)}</div>${inner}`;
       });
     }
   }
 
-  let diff = '';
-  if (rec.diff && rec.diff.length){
-    diff = `<div class="diff"><div class="dh">Reconciled vs ${esc(rec.prior_doc_id||'prior record')} — ${rec.diff.length} field(s) changed, re-verified</div>` +
-      rec.diff.map(d=>`<div class="drow"><code>${esc(d.field)}</code><div><code class="from">${esc(d.from)}</code> &rarr; <code class="to">${esc(d.to)}</code></div></div>`).join('') +
-      `</div>`;
+  let diff='';
+  if(rec.diff && rec.diff.length){
+    diff = `<div class="diff"><div class="dh">Reconciled vs ${esc(rec.prior_doc_id||'prior')} — ${rec.diff.length} field(s) changed &amp; re-verified</div>`+
+      rec.diff.map(d=>`<div class="drow"><code>${esc(d.field)}</code><div><code class="from">${esc(fmtVal(d.from))}</code> &nbsp;→&nbsp; <code class="to">${esc(fmtVal(d.to))}</code></div></div>`).join('')+`</div>`;
   }
+  let reasons='';
+  if(r.reasons && r.reasons.length) reasons = `<ul class="reasons">`+r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')+`</ul>`;
 
-  let reasons = '';
-  if (r.reasons && r.reasons.length){
-    reasons = `<ul class="reasons">` + r.reasons.map(x=>`<li>${esc(x)}</li>`).join('') + `</ul>`;
-  }
-
-  return `<section class="card" id="${esc(rec.doc_id)}">
-    <h2>${esc(rec.doc_id)} ${stChip}</h2>
-    <div class="sub">${esc(rec.schema_title||'')} · source: ${esc(rec.source_pdf||'')}</div>
+  return `<section class="sheet${review?' review':''}" data-type="${esc(rec.schema_title||'')}" data-status="${review?'review':'indexed'}" style="animation-delay:${Math.min(i,8)*60}ms">
+    <h2>${esc(rec.doc_id)} ${badge}</h2>
+    <div class="src"><span class="type">${esc(typeLabel(rec.schema_title))}</span> &nbsp;·&nbsp; ${esc(rec.source_pdf||'')}</div>
+    ${routingHTML(rec.routing)}
     <div class="gates">${gates}</div>
     ${body}${diff}${reasons}
   </section>`;
 }
 
-document.getElementById('main').innerHTML = RECORDS.map(recordHTML).join('');
-document.getElementById('nav').innerHTML = RECORDS.map(rec=>{
-  const cls = rec._report.status==='review'?'c-review':'c-indexed';
-  const tag = rec._report.status==='review'?'review':'indexed';
-  return `<a href="#${esc(rec.doc_id)}"><span>${esc(rec.doc_id)}</span><span class="chip ${cls}">${tag}</span></a>`;
-}).join('');
+// ---- render ----
+const main = document.getElementById('main');
+main.innerHTML = RECORDS.map(recordHTML).join('');
+
 const idx = RECORDS.filter(r=>r._report.status!=='review').length;
 const rev = RECORDS.length - idx;
-document.getElementById('foot').textContent =
-  `${idx} indexed · ${rev} in review queue · synthetic ACORD-style corpus · built with Claude Code + Opus 4.8`;
+const types = [...new Set(RECORDS.map(r=>r.schema_title))];
+document.getElementById('stats').innerHTML =
+  `<div class="stat ok"><b>verifier&nbsp;0</b><span>exits clean</span></div>`+
+  `<div class="stat"><b>${idx}</b><span>indexed</span></div>`+
+  `<div class="stat"><b>${rev}</b><span>in review</span></div>`+
+  `<div class="stat"><b>${types.length}</b><span>document types</span></div>`;
+
+// filter chips
+const counts = {};
+RECORDS.forEach(r=>{counts[r.schema_title]=(counts[r.schema_title]||0)+1;});
+const chips = [['all','All',RECORDS.length]]
+  .concat(types.map(t=>[t, typeLabel(t), counts[t]]))
+  .concat([['__review','Review queue',rev]]);
+document.getElementById('filters').innerHTML = chips.map((c,i)=>
+  `<button class="chip${i===0?' on':''}" data-f="${esc(c[0])}">${esc(c[1])}<span class="ct">${c[2]}</span></button>`).join('');
+
+document.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  ch.classList.add('on');
+  const f = ch.dataset.f;
+  let n=0;
+  document.querySelectorAll('.sheet').forEach((s,i)=>{
+    const show = f==='all' || (f==='__review'? s.dataset.status==='review' : s.dataset.type===f);
+    s.classList.toggle('hide', !show);
+    if(show){ s.style.animation='none'; s.offsetHeight; s.style.animation=`rise .5s cubic-bezier(.2,.7,.2,1) ${Math.min(n,8)*45}ms forwards`; n++; }
+  });
+}));
+
+document.getElementById('foot').innerHTML =
+  `${idx} indexed · ${rev} in review · ${types.length} document types, one pipeline · synthetic ACORD-style corpus<br>`+
+  `Built with Claude Code + Claude Opus 4.8 · <a href="https://github.com/kaitlynhemby/insurance-indexer">source</a>`;
 </script>
 </body>
 </html>
