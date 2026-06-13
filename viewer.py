@@ -113,6 +113,11 @@ _TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Verified Insurance Index — live demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%237c3b27'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='%23efe9db' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="description" content="Emailed insurance PDFs, indexed and proven — every field traces to its source span, verified, and configurable for any insurer.">
+<meta property="og:title" content="Verified Insurance Index — live demo">
+<meta property="og:description" content="Emailed insurance PDFs → verified records with source proof, self-routing review, and a config agent that re-targets the pipeline to any insurer.">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -382,8 +387,9 @@ function cellHTML(name, cell, file){
   const src = cell.source||{};
   let ev = '';
   if (src.text_span){
-    const sp = encodeURIComponent(src.text_span);
-    ev = `<div class="ev" onclick="openPdf('${esc(file)}',${src.page||1},decodeURIComponent('${sp}'),'${esc(name)}')">
+    // data-* attributes (double-quoted; esc handles ") + a delegated listener —
+    // no inline onclick, so untrusted field/file/span text can't break into JS.
+    ev = `<div class="ev" data-file="${esc(file)}" data-page="${src.page||1}" data-span="${esc(src.text_span)}" data-name="${esc(name)}">
       <div class="pg"><span>source · page ${src.page}</span><span class="see">view in PDF →</span></div>&ldquo;${esc(src.text_span)}&rdquo;</div>`;
   }
   const rev = flagged ? `<div><span class="rev">needs review</span></div>` : '';
@@ -505,6 +511,11 @@ function init(){
   // chat
   const idx=RECORDS.length-rev;
   document.getElementById('foot').innerHTML=`${idx} indexed · ${rev} in review · ${types.length} document types, one pipeline · synthetic ACORD-style corpus<br>Built with Claude Code + Claude Opus 4.8 · <a href="https://github.com/kaitlynhemby/insurance-indexer">source</a>`;
+  // delegated: open a field's source PDF from its data-* attributes (no inline JS)
+  document.addEventListener('click',e=>{
+    const el=e.target.closest('.ev'); if(!el||!el.dataset.file) return;
+    openPdf(el.dataset.file, +el.dataset.page, el.dataset.span, el.dataset.name);
+  });
   document.getElementById('fab').addEventListener('click',openChat);
   document.getElementById('chatX').addEventListener('click',closeChat);
   document.getElementById('mX').addEventListener('click',()=>document.getElementById('modal').classList.remove('open'));
