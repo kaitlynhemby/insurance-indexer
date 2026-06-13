@@ -22,6 +22,7 @@ import copy
 import glob
 import json
 import os
+import re
 import sys
 from typing import Dict, List, Optional, Tuple
 
@@ -46,6 +47,11 @@ SYSTEM_AUTHOR_GAPS = (
     "You are a schema gap-analysis function for an insurance document indexer. Given an active "
     "schema and the text of sample documents, you find recurring data the schema fails to capture. "
     "Do not use tools, do not explain. Respond with ONLY a single JSON object."
+)
+SYSTEM_AUTHOR_INTERPRET = (
+    "You interpret an insurer's free-text replies to yes/no field-capture questions for a document "
+    "schema. A reply may confirm, decline, rename the field, and/or change its type. Do not use "
+    "tools, do not explain. Respond with ONLY a single JSON object."
 )
 
 SUPPORTED_SHAPE_RULES = (
@@ -215,37 +221,134 @@ def _data_driven_gaps(active: dict, sample_texts) -> List[dict]:
 # --------------------------------------------------------------------------
 # conversation + apply
 # --------------------------------------------------------------------------
-def _ask_gaps(channel, questions: List[dict]) -> Dict[str, bool]:
-    decisions: Dict[str, bool] = {}
+def _sanitize_field(name: str) -> str:
+    """A label like 'Effective Date' -> snake_case key 'effective_date'."""
+    slug = re.sub(r"[^a-z0-9]+", "_", (name or "").strip().lower()).strip("_")
+    return slug or "field"
+
+
+_RENAME_RE = re.compile(
+    r"(?:call it|label(?:ed| it)?|name(?:d| it)?|rename(?:d)?(?: to| it)?|as)\s+"
+    r"['\"]?([a-zA-Z][a-zA-Z0-9 _-]{0,40})['\"]?",
+    re.IGNORECASE,
+)
+
+
+def _extract_rename(reply: str) -> Optional[str]:
+    """Best-effort fallback rename extraction (used only if model interpretation
+    is unavailable). e.g. 'yes, call it effective date' -> 'effective date'."""
+    m = _RENAME_RE.search(reply or "")
+    if not m:
+        return None
+    return m.group(1).strip(" .,:;!?")
+
+
+def _ask_gaps(channel, questions: List[dict]) -> List[dict]:
+    """Ask each gap question and collect the raw free-text reply."""
+    replies = []
     for q in questions:
         fn = q.get("field_name", "?")
         prompt = q.get("question") or f"Should I also collect '{fn}'? {q.get('reason', '')}"
         tag = "[noticed in your sample documents] " if q.get("source") == "data-driven" else ""
         reply = channel.ask(tag + prompt, timeout=CHANNEL_TIMEOUT)
-        confirmed = _affirmative(reply)
-        decisions[fn] = confirmed
-        print(f"  [{'add ' if confirmed else 'skip'}] {fn}  (reply: {reply!r})")
-    return decisions
+        print(f"  [reply] {fn}: {reply!r}")
+        replies.append({**q, "reply": reply})
+    return replies
 
 
-def _apply(base_schema: dict, questions: List[dict], decisions: Dict[str, bool]) -> dict:
-    """Deterministically fold confirmed fields into the schema (added as OPTIONAL
-    so existing records of an edited type still validate); drop rejected ones."""
+def _resolve_decisions(replies: List[dict]) -> List[dict]:
+    """Turn free-text replies into structured decisions, honoring rename/retype.
+    Returns [{original, confirmed, name, leaf}]. Uses the model to interpret each
+    reply (so 'yes, call it effective date' renames the field); falls back to a
+    yes/no + regex-rename heuristic if the model is unavailable."""
+    if not replies:
+        return []
+    items = [
+        {
+            "field_name": r.get("field_name"),
+            "question": r.get("question"),
+            "proposed": r.get("proposed") or {"type": "string"},
+            "reply": r.get("reply", ""),
+        }
+        for r in replies
+    ]
+    user = "\n".join([
+        "For each item, the insurer was asked whether to capture a field and replied freely. "
+        "Decide what to do with each:",
+        json.dumps(items, indent=2),
+        "",
+        SUPPORTED_SHAPE_RULES,
+        "",
+        'Return ONE JSON object {"decisions": [ {"field_name": <original>, "confirmed": <bool>, '
+        '"name": <snake_case field name to use>, "leaf": <final scalar leaf schema> } ]} — one per '
+        "item, in the same order.",
+        "Rules: confirmed=true only if the reply affirms capturing the field (yes/sure/please/etc.); "
+        "false for no/skip/unclear/empty. If the insurer asked to RENAME or RELABEL it (e.g. "
+        "'yes, call it effective date'), set name to a snake_case version of the requested label "
+        "('effective_date'); otherwise name = field_name. If they asked for a different TYPE/FORMAT "
+        "(e.g. 'make it a date', 'as a number'), adjust leaf (scalar only); otherwise leaf = proposed.",
+    ])
+    decs = None
+    try:
+        obj = extract.call_model(user, SYSTEM_AUTHOR_INTERPRET)
+        if isinstance(obj, dict) and isinstance(obj.get("decisions"), list):
+            decs = obj["decisions"]
+    except Exception as exc:
+        print(f"  [interpret] model interpretation unavailable ({exc}); using yes/no fallback")
+
+    out: List[dict] = []
+    by_orig = {r.get("field_name"): r for r in replies}
+    if decs:
+        for d in decs:
+            orig = d.get("field_name")
+            r = by_orig.get(orig, {})
+            leaf = d.get("leaf")
+            if not _leaf_supported(leaf):
+                leaf = r.get("proposed") or {"type": "string"}
+            out.append({
+                "original": orig,
+                "confirmed": bool(d.get("confirmed")),
+                "name": _sanitize_field(d.get("name") or orig or "field"),
+                "leaf": leaf,
+            })
+    else:  # deterministic fallback
+        for r in replies:
+            reply = r.get("reply", "")
+            renamed = _extract_rename(reply) if _affirmative(reply) else None
+            leaf = r.get("proposed") or {"type": "string"}
+            out.append({
+                "original": r.get("field_name"),
+                "confirmed": _affirmative(reply),
+                "name": _sanitize_field(renamed or r.get("field_name") or "field"),
+                "leaf": leaf if _leaf_supported(leaf) else {"type": "string"},
+            })
+
+    for d in out:
+        rename = f" → {d['name']}" if d["name"] != d["original"] else ""
+        print(f"  [{'add ' if d['confirmed'] else 'skip'}] {d['original']}{rename}")
+    return out
+
+
+def _apply(base_schema: dict, decisions: List[dict]) -> dict:
+    """Fold resolved decisions into the schema. Confirmed fields are added under
+    their (possibly renamed) name as OPTIONAL — so existing records of an edited
+    type still validate; declined fields are dropped if speculatively present."""
     final = copy.deepcopy(base_schema)
     props = final.setdefault("properties", {})
     required = final.setdefault("required", [])
-    by_name = {q.get("field_name"): q for q in questions}
-    for fn, confirmed in decisions.items():
-        if confirmed:
-            proposed = (by_name.get(fn) or {}).get("proposed") or {"type": "string"}
-            if _leaf_supported(proposed):
-                props.setdefault(fn, proposed)
+    for d in decisions:
+        orig, name, leaf = d["original"], d["name"], d["leaf"]
+        if d["confirmed"]:
+            if _leaf_supported(leaf):
+                props.setdefault(name, leaf)
+                if name != orig:
+                    props.pop(orig, None)  # avoid leaving a speculative original
             else:
-                print(f"  [skip] confirmed field '{fn}': proposed leaf unsupported ({proposed})")
+                print(f"  [skip] confirmed field '{name}': leaf unsupported ({leaf})")
         else:
-            props.pop(fn, None)
-            if fn in required:
-                required.remove(fn)
+            props.pop(orig, None)
+            if orig in required:
+                required.remove(orig)
     return final
 
 
@@ -330,9 +433,10 @@ def onboard(description: str, samples_dir: Optional[str], channel_name: str, kee
     questions = draft.get("questions", [])
     if questions:
         channel.send(f"I drafted a schema and have {len(questions)} field(s) I'd like to confirm with you.")
-    decisions = _ask_gaps(channel, questions) if questions else {}
+    replies = _ask_gaps(channel, questions) if questions else []
+    decisions = _resolve_decisions(replies)
 
-    final = _apply(draft["schema"], questions, decisions)
+    final = _apply(draft["schema"], decisions)
     target = _title_to_path(final.get("title", "DocType"))
     violations = _validate(final, exclude_path=target)
     if violations:
@@ -388,9 +492,10 @@ def review(samples_dir: Optional[str], channel_name: str) -> int:
         print("no gaps found.")
         return 0
 
-    decisions = _ask_gaps(channel, gaps)
-    updated = _apply(active, gaps, decisions)
-    added = [q.get("field_name") for q in gaps if decisions.get(q.get("field_name")) and q.get("field_name") in updated["properties"]]
+    replies = _ask_gaps(channel, gaps)
+    decisions = _resolve_decisions(replies)
+    updated = _apply(active, decisions)
+    added = [d["name"] for d in decisions if d["confirmed"] and d["name"] in updated["properties"]]
     if not added:
         channel.send("Nothing confirmed — leaving the schema unchanged.")
         return 0
