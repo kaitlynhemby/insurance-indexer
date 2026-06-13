@@ -199,15 +199,18 @@ def _call_cli(user: str, system: str) -> dict:
 def _call_api(user: str, system: str) -> dict:
     import anthropic  # type: ignore
 
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(timeout=120.0, max_retries=2)
     # Opus 4.8: adaptive thinking only; temperature/top_p/top_k are rejected (400).
     # 8192 leaves room for the long FNOL loss_description plus every field's span.
-    msg = client.messages.create(
+    # STREAM the response: a non-streaming request at this max_tokens can hit the
+    # SDK's idle-connection timeout and hang for minutes; streaming avoids that.
+    with client.messages.stream(
         model=MODEL,
         max_tokens=8192,
         system=system,
         messages=[{"role": "user", "content": user}],
-    )
+    ) as stream:
+        msg = stream.get_final_message()
     text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text")
     return _extract_json_object(text)
 
