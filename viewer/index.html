@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verified Insurance Index</title>
+<style>
+  :root{
+    --paper:#f4f2ec; --card:#fffdf8; --ink:#23282c; --muted:#6b7177;
+    --line:#e2ddd1; --verified:#0f6e5f; --review:#b4690e; --fail:#b3261e;
+    --span:#fbf6e9; --spanline:#ead9b0; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-serif;
+       line-height:1.5;font-size:15px}
+  header{padding:30px 32px 18px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:22px;letter-spacing:-.01em}
+  header p{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:70ch}
+  .layout{display:flex;align-items:flex-start}
+  nav{position:sticky;top:0;flex:0 0 250px;padding:22px 16px;border-right:1px solid var(--line);
+      height:100vh;overflow:auto}
+  nav a{display:flex;justify-content:space-between;gap:8px;align-items:center;
+        text-decoration:none;color:var(--ink);padding:8px 10px;border-radius:8px;font-size:14px}
+  nav a:hover{background:#0000000a}
+  main{flex:1;padding:24px 32px 80px;max-width:1000px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+        padding:22px 24px;margin-bottom:26px;box-shadow:0 1px 2px #0000000a}
+  .card h2{margin:0;font-size:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 16px}
+  .chip{font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
+        padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .c-indexed{background:#0f6e5f1a;color:var(--verified)}
+  .c-review{background:#b4690e1a;color:var(--review)}
+  .gates{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+  .gate{font-size:11px;font-family:var(--mono);padding:3px 8px;border-radius:6px;border:1px solid var(--line)}
+  .g-pass{background:#0f6e5f12;color:var(--verified);border-color:#0f6e5f33}
+  .g-fail{background:#b3261e12;color:var(--fail);border-color:#b3261e33}
+  .g-na{background:#0000000a;color:var(--muted)}
+  .field{display:grid;grid-template-columns:200px 1fr;gap:14px;padding:13px 0;border-top:1px solid var(--line)}
+  .fname{font-weight:600;font-size:14px}
+  .fname .rev{display:inline-block;margin-top:5px;font-weight:600;font-size:10.5px;
+              color:var(--review);background:#b4690e1a;padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .val{font-family:var(--mono);font-size:14px;word-break:break-word}
+  .val.null{color:var(--muted);font-style:italic}
+  .conf{font-size:12px;color:var(--muted);margin-top:3px}
+  .bar{display:inline-block;width:84px;height:5px;border-radius:3px;background:#0000000f;vertical-align:middle;margin-right:7px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:3px}
+  .span{margin-top:9px;background:var(--span);border:1px solid var(--spanline);border-left:3px solid var(--review);
+        border-radius:6px;padding:8px 11px;font-family:var(--mono);font-size:12.5px;color:#5a4a25}
+  .span .pg{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+  .cov{margin:14px 0 4px;padding:14px 16px;background:#00000005;border:1px solid var(--line);border-radius:10px}
+  .cov h3{margin:0 0 4px;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+  .diff{margin-top:18px;border:1px solid #b4690e44;border-radius:10px;overflow:hidden}
+  .diff .dh{background:#b4690e12;color:var(--review);font-weight:600;font-size:13px;padding:9px 14px}
+  .drow{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;align-items:center}
+  .drow code{font-family:var(--mono);font-size:12.5px}
+  .from{color:var(--fail);text-decoration:line-through}
+  .to{color:var(--verified);font-weight:600}
+  .reasons{margin-top:12px;font-size:12.5px;color:var(--muted)}
+  .reasons li{margin:2px 0}
+  footer{color:var(--muted);font-size:12px;padding:0 32px 40px;max-width:1000px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Verified Insurance Index</h1>
+  <p>Every field traces to a verbatim source span. Low-confidence fields route themselves to the review queue. The index reconciles updated documents with a field-level diff. Graded by an independent verifier — <code>verifier.py</code> exits&nbsp;0.</p>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+<footer id="foot"></footer>
+<script>
+const RECORDS = [
+  {
+    "doc_id": "COI-1001_Harborview",
+    "source_pdf": "inbox/COI-1001_Harborview.pdf",
+    "schema_title": "CertificateOfInsurance",
+    "attempts": 1,
+    "extraction": {
+      "document_type": {
+        "value": "certificate_of_insurance",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+        },
+        "needs_review": false
+      },
+      "producer": {
+        "value": "Brightline Insurance Brokers",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "PRODUCER INSURED\nBrightline Insurance Brokers"
+        },
+        "needs_review": false
+      },
+      "insured_name": {
+        "value": "Harborview Logistics LLC",
+        "confidence": 0.96,
+        "source": {
+          "page": 1,
+          "text_span": "Brightline Insurance Brokers Harborview Logistics LLC"
+        },
+        "needs_review": false
+      },
+      "certificate_holder": {
+        "value": "Cascade Property Group",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "CERTIFICATE HOLDER\nCascade Property Group"
+        },
+        "needs_review": false
+      },
+      "issue_date": {
+        "value": "2026-05-14",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "DATE ISSUED (MM/DD/YYYY): 05/14/2026"
+        },
+        "needs_review": false
+      },
+      "coverages": [
+        {
+          "coverage_type": {
+            "value": "general_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "COMMERCIAL GENERAL LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "GL-88421",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: GL-88421"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-01-01",
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-01-01",
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 01/01/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 2000000,
+            "confidence": 0.96,
+            "source": {
+              "page": 1,
+              "text_span": "Each Occurrence: $2,000,000"
+            },
+            "needs_review": false
+          }
+        },
+        {
+          "coverage_type": {
+            "value": "auto_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "AUTOMOBILE LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "AL-22310",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: AL-22310"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-01-01",
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-01-01",
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 01/01/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 1000000,
+            "confidence": 0.96,
+            "source": {
+              "page": 1,
+              "text_span": "Combined Single Limit: $1,000,000"
+            },
+            "needs_review": false
+          }
+        }
+      ]
+    },
+    "_report": {
+      "doc_id": "COI-1001_Harborview",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "pass"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "COI-1001_Harborview_UPDATED",
+    "source_pdf": "inbox/COI-1001_Harborview_UPDATED.pdf",
+    "schema_title": "CertificateOfInsurance",
+    "attempts": 1,
+    "extraction": {
+      "document_type": {
+        "value": "certificate_of_insurance",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+        },
+        "needs_review": false
+      },
+      "producer": {
+        "value": "Brightline Insurance Brokers",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "PRODUCER INSURED\nBrightline Insurance Brokers"
+        },
+        "needs_review": false
+      },
+      "insured_name": {
+        "value": "Harborview Logistics LLC",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "Brightline Insurance Brokers Harborview Logistics LLC"
+        },
+        "needs_review": false
+      },
+      "certificate_holder": {
+        "value": "Cascade Property Group",
+        "confidence": 0.98,
+        "source": {
+          "page": 2,
+          "text_span": "CERTIFICATE HOLDER\nCascade Property Group"
+        },
+        "needs_review": false
+      },
+      "issue_date": {
+        "value": "2026-06-10",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "DATE ISSUED (MM/DD/YYYY): 06/10/2026"
+        },
+        "needs_review": false
+      },
+      "coverages": [
+        {
+          "coverage_type": {
+            "value": "general_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "COMMERCIAL GENERAL LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "GL-88421",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: GL-88421"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-01-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-06-30",
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 06/30/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 3000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Each Occurrence: $3,000,000"
+            },
+            "needs_review": false
+          }
+        },
+        {
+          "coverage_type": {
+            "value": "auto_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "AUTOMOBILE LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "AL-22310",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: AL-22310"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-01-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-01-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 01/01/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 1000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Combined Single Limit: $1,000,000"
+            },
+            "needs_review": false
+          }
+        }
+      ]
+    },
+    "prior": {
+      "document_type": "certificate_of_insurance",
+      "producer": "Brightline Insurance Brokers",
+      "insured_name": "Harborview Logistics LLC",
+      "certificate_holder": "Cascade Property Group",
+      "issue_date": "2026-05-14",
+      "coverages": [
+        {
+          "coverage_type": "general_liability",
+          "policy_number": "GL-88421",
+          "effective_date": "2026-01-01",
+          "expiration_date": "2027-01-01",
+          "limit": 2000000
+        },
+        {
+          "coverage_type": "auto_liability",
+          "policy_number": "AL-22310",
+          "effective_date": "2026-01-01",
+          "expiration_date": "2027-01-01",
+          "limit": 1000000
+        }
+      ]
+    },
+    "prior_doc_id": "COI-1001_Harborview",
+    "diff": [
+      {
+        "field": "coverages[general_liability].expiration_date",
+        "from": "2027-01-01",
+        "to": "2027-06-30"
+      },
+      {
+        "field": "coverages[general_liability].limit",
+        "from": 2000000,
+        "to": 3000000
+      },
+      {
+        "field": "issue_date",
+        "from": "2026-05-14",
+        "to": "2026-06-10"
+      }
+    ],
+    "_report": {
+      "doc_id": "COI-1001_Harborview_UPDATED",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "pass",
+        "6_accuracy": "n/a"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "COI-1002_Sierra",
+    "source_pdf": "inbox/COI-1002_Sierra.pdf",
+    "schema_title": "CertificateOfInsurance",
+    "attempts": 1,
+    "extraction": {
+      "document_type": {
+        "value": "certificate_of_insurance",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+        },
+        "needs_review": false
+      },
+      "producer": {
+        "value": "Anchor Risk Partners",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "PRODUCER INSURED\nAnchor Risk Partners Sierra Stoneworks Inc."
+        },
+        "needs_review": false
+      },
+      "insured_name": {
+        "value": "Sierra Stoneworks Inc.",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "Anchor Risk Partners Sierra Stoneworks Inc."
+        },
+        "needs_review": false
+      },
+      "certificate_holder": {
+        "value": "Meridian Builders",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "CERTIFICATE HOLDER\nMeridian Builders"
+        },
+        "needs_review": false
+      },
+      "issue_date": {
+        "value": "2026-04-02",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "DATE ISSUED (MM/DD/YYYY): 04/02/2026"
+        },
+        "needs_review": false
+      },
+      "coverages": [
+        {
+          "coverage_type": {
+            "value": "general_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "COMMERCIAL GENERAL LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "GL-50917",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: GL-50917"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2025-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2026-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 1000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Each Occurrence: $1,000,000"
+            },
+            "needs_review": false
+          }
+        },
+        {
+          "coverage_type": {
+            "value": "umbrella",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "UMBRELLA / EXCESS LIAB"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "UMB-7740",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: UMB-7740"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2025-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2026-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 5000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Each Occurrence: $5,000,000"
+            },
+            "needs_review": false
+          }
+        },
+        {
+          "coverage_type": {
+            "value": "workers_comp",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "WORKERS COMPENSATION AND EMPLOYERS' LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "WC-30188",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: WC-30188"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2025-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2026-09-01",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 1000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "E.L. Each Accident: $1,000,000"
+            },
+            "needs_review": false
+          }
+        }
+      ]
+    },
+    "_report": {
+      "doc_id": "COI-1002_Sierra",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "pass"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "COI-1003_Lumen",
+    "source_pdf": "inbox/COI-1003_Lumen.pdf",
+    "schema_title": "CertificateOfInsurance",
+    "attempts": 1,
+    "extraction": {
+      "document_type": {
+        "value": "certificate_of_insurance",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+        },
+        "needs_review": false
+      },
+      "producer": {
+        "value": "Brightline Insurance Brokers",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "PRODUCER INSURED\nBrightline Insurance Brokers"
+        },
+        "needs_review": false
+      },
+      "insured_name": {
+        "value": "Lumen Tech Services",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "Lumen Tech Services"
+        },
+        "needs_review": false
+      },
+      "certificate_holder": {
+        "value": "Northgate Plaza Associates",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "CERTIFICATE HOLDER\nNorthgate Plaza Associates"
+        },
+        "needs_review": false
+      },
+      "issue_date": {
+        "value": "2026-06-01",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "DATE ISSUED (MM/DD/YYYY): 06/01/2026"
+        },
+        "needs_review": false
+      },
+      "coverages": [
+        {
+          "coverage_type": {
+            "value": "general_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "COMMERCIAL GENERAL LIABILITY"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "GL-66102",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: GL-66102"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-03-15",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 03/15/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-03-15",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 03/15/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 2000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Each Occurrence: $2,000,000"
+            },
+            "needs_review": false
+          }
+        },
+        {
+          "coverage_type": {
+            "value": "professional_liability",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "PROFESSIONAL LIABILITY (E&O)"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "PL-11920",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY NUMBER: PL-11920"
+            },
+            "needs_review": false
+          },
+          "effective_date": {
+            "value": "2026-03-15",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EFF (MM/DD/YYYY): 03/15/2026"
+            },
+            "needs_review": false
+          },
+          "expiration_date": {
+            "value": "2027-03-15",
+            "confidence": 0.98,
+            "source": {
+              "page": 1,
+              "text_span": "POLICY EXP (MM/DD/YYYY): 03/15/2027"
+            },
+            "needs_review": false
+          },
+          "limit": {
+            "value": 3000000,
+            "confidence": 0.97,
+            "source": {
+              "page": 1,
+              "text_span": "Each Claim: $3,000,000"
+            },
+            "needs_review": false
+          }
+        }
+      ]
+    },
+    "_report": {
+      "doc_id": "COI-1003_Lumen",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "pass"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "FNOL-2001_Harborview",
+    "source_pdf": "inbox/FNOL-2001_Harborview.pdf",
+    "schema_title": "FirstNoticeOfLoss",
+    "attempts": 2,
+    "extraction": {
+      "document_type": {
+        "value": "first_notice_of_loss",
+        "confidence": 1.0,
+        "source": {
+          "page": 1,
+          "text_span": "PROPERTY & CASUALTY - FIRST NOTICE OF LOSS (FNOL)"
+        },
+        "needs_review": false
+      },
+      "policy_number": {
+        "value": "POL-44821",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "Policy Number: POL-44821"
+        },
+        "needs_review": false
+      },
+      "policyholder_name": {
+        "value": "Harborview Logistics LLC",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "Policyholder / Named Insured: Harborview Logistics LLC"
+        },
+        "needs_review": false
+      },
+      "loss_date": {
+        "value": "2026-05-30",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "Date of Loss (MM/DD/YYYY): 05/30/2026"
+        },
+        "needs_review": false
+      },
+      "report_date": {
+        "value": "2026-06-02",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "Date Reported (MM/DD/YYYY): 06/02/2026"
+        },
+        "needs_review": false
+      },
+      "loss_type": {
+        "value": "auto",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "Type of Loss: Auto - Collision"
+        },
+        "needs_review": false
+      },
+      "loss_location": {
+        "value": "I-90 near Exit 34, Issaquah WA",
+        "confidence": 0.98,
+        "source": {
+          "page": 2,
+          "text_span": "Loss Location: I-90 near Exit 34, Issaquah WA"
+        },
+        "needs_review": false
+      },
+      "loss_description": {
+        "value": "Insured box truck (unit 12) was traveling eastbound and rear-ended a sedan that had stopped suddenly at a signal. Front bumper, hood, and radiator damage to the insured vehicle. The other driver, Dana Whitfield, reported neck stiffness and declined transport at the scene.",
+        "confidence": 0.95,
+        "source": {
+          "page": 2,
+          "text_span": "Insured box truck (unit 12) was traveling eastbound and rear-ended a sedan that had stopped suddenly at a signal. Front bumper, hood, and radiator\ndamage to the insured vehicle. The other driver, Dana Whitfield, reported neck stiffness and declined transport at the scene."
+        },
+        "needs_review": false
+      },
+      "claimant_name": {
+        "value": "Dana Whitfield",
+        "confidence": 0.99,
+        "source": {
+          "page": 2,
+          "text_span": "Claimant Name: Dana Whitfield"
+        },
+        "needs_review": false
+      },
+      "reported_by": {
+        "value": "Marcus Lee (Fleet Manager)",
+        "confidence": 0.98,
+        "source": {
+          "page": 2,
+          "text_span": "Reported By: Marcus Lee (Fleet Manager)"
+        },
+        "needs_review": false
+      },
+      "estimated_severity": {
+        "value": "medium",
+        "confidence": 0.98,
+        "source": {
+          "page": 2,
+          "text_span": "Estimated Severity: Medium"
+        },
+        "needs_review": false
+      }
+    },
+    "_report": {
+      "doc_id": "FNOL-2001_Harborview",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "pass"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "FNOL-2002_Sierra",
+    "source_pdf": "inbox/FNOL-2002_Sierra.pdf",
+    "schema_title": "FirstNoticeOfLoss",
+    "attempts": 2,
+    "extraction": {
+      "document_type": {
+        "value": "first_notice_of_loss",
+        "confidence": 0.99,
+        "source": {
+          "page": 1,
+          "text_span": "PROPERTY & CASUALTY - FIRST NOTICE OF LOSS (FNOL)"
+        },
+        "needs_review": false
+      },
+      "policy_number": {
+        "value": "POL-90233",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "Policy Number: POL-90233"
+        },
+        "needs_review": false
+      },
+      "policyholder_name": {
+        "value": "Sierra Stoneworks Inc.",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "Policyholder / Named Insured: Sierra Stoneworks Inc."
+        },
+        "needs_review": false
+      },
+      "loss_date": {
+        "value": "2026-04-18",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "Date of Loss (MM/DD/YYYY): 04/18/2026"
+        },
+        "needs_review": false
+      },
+      "report_date": {
+        "value": "2026-04-19",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "Date Reported (MM/DD/YYYY): 04/19/2026"
+        },
+        "needs_review": false
+      },
+      "loss_type": {
+        "value": "property",
+        "confidence": 0.97,
+        "source": {
+          "page": 1,
+          "text_span": "Type of Loss: Property - Water Damage"
+        },
+        "needs_review": false
+      },
+      "loss_location": {
+        "value": "Warehouse B, 1420 Quarry Rd, Tacoma WA",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "Loss Location: Warehouse B, 1420 Quarry Rd, Tacoma WA"
+        },
+        "needs_review": false
+      },
+      "loss_description": {
+        "value": "During a windstorm, a section of the warehouse roof membrane lifted and rainwater entered over the storage bays. Two pallets of finished stone slab, packaging materials, and a forklift battery charger were water-damaged. Standing water was present on the floor the following morning.",
+        "confidence": 0.95,
+        "source": {
+          "page": 2,
+          "text_span": "During a windstorm, a section of the warehouse roof membrane lifted and rainwater entered over the storage bays. Two pallets of finished stone slab,\npackaging materials, and a forklift battery charger were water-damaged. Standing water was present on the floor the following morning."
+        },
+        "needs_review": false
+      },
+      "claimant_name": {
+        "value": "N/A (first-party)",
+        "confidence": 0.96,
+        "source": {
+          "page": 2,
+          "text_span": "Claimant Name: N/A (first-party)"
+        },
+        "needs_review": false
+      },
+      "reported_by": {
+        "value": "Elena Cruz (Site Supervisor)",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "Reported By: Elena Cruz (Site Supervisor)"
+        },
+        "needs_review": false
+      },
+      "estimated_severity": {
+        "value": "high",
+        "confidence": 0.97,
+        "source": {
+          "page": 2,
+          "text_span": "Estimated Severity: High"
+        },
+        "needs_review": false
+      }
+    },
+    "_report": {
+      "doc_id": "FNOL-2002_Sierra",
+      "status": "indexed",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "pass",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "pass"
+      },
+      "pass": true,
+      "run_ok": true,
+      "reasons": []
+    }
+  },
+  {
+    "doc_id": "COI-SCAN_Pinecrest",
+    "source_pdf": "inbox/COI-SCAN_Pinecrest.pdf",
+    "schema_title": "CertificateOfInsurance",
+    "attempts": 2,
+    "extraction": {
+      "document_type": {
+        "value": "certificate_of_insurance",
+        "confidence": 0.98,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+        },
+        "needs_review": false
+      },
+      "producer": {
+        "value": "Anchor Risk Partners",
+        "confidence": 0.95,
+        "source": {
+          "page": 1,
+          "text_span": "PRODUCER: Anchor Risk Partners"
+        },
+        "needs_review": false
+      },
+      "insured_name": {
+        "value": "Pinecrest Catering Co.",
+        "confidence": 0.95,
+        "source": {
+          "page": 1,
+          "text_span": "INSURED: Pinecrest Catering Co."
+        },
+        "needs_review": false
+      },
+      "certificate_holder": {
+        "value": "Evently Venues LLC",
+        "confidence": 0.92,
+        "source": {
+          "page": 1,
+          "text_span": "CERTIFICATE HOLDER: Evently Venues LLC"
+        },
+        "needs_review": false
+      },
+      "issue_date": {
+        "value": null,
+        "confidence": 0.2,
+        "source": {
+          "page": 1,
+          "text_span": "DATE ISSUED: OW20/2026"
+        },
+        "needs_review": true
+      },
+      "coverages": [
+        {
+          "coverage_type": {
+            "value": "general_liability",
+            "confidence": 0.9,
+            "source": {
+              "page": 1,
+              "text_span": "Commercial GGen't Liab"
+            },
+            "needs_review": false
+          },
+          "policy_number": {
+            "value": "GL-77345",
+            "confidence": 0.55,
+            "source": {
+              "page": 1,
+              "text_span": "GL-77345 SEQ GET Hh ceeee"
+            },
+            "needs_review": true
+          },
+          "effective_date": {
+            "value": null,
+            "confidence": 0.1,
+            "source": {
+              "page": 1,
+              "text_span": "GL-77345 SEQ GET Hh ceeee"
+            },
+            "needs_review": true
+          },
+          "expiration_date": {
+            "value": null,
+            "confidence": 0.1,
+            "source": {
+              "page": 1,
+              "text_span": "GL-77345 SEQ GET Hh ceeee"
+            },
+            "needs_review": true
+          },
+          "limit": {
+            "value": null,
+            "confidence": 0.3,
+            "source": {
+              "page": 1,
+              "text_span": "Hach Occurrence $1.000.000"
+            },
+            "needs_review": true
+          }
+        }
+      ]
+    },
+    "_report": {
+      "doc_id": "COI-SCAN_Pinecrest",
+      "status": "review",
+      "gates": {
+        "1_grounding": "pass",
+        "2_schema": "fail",
+        "3_confidence": "pass",
+        "4_no_fabrication": "pass",
+        "5_reconciliation": "n/a",
+        "6_accuracy": "n/a"
+      },
+      "pass": false,
+      "run_ok": true,
+      "reasons": [
+        "GATE2 (root): 'issue_date' is a required property",
+        "GATE2 coverages/0: 'effective_date' is a required property",
+        "GATE2 coverages/0: 'expiration_date' is a required property"
+      ]
+    }
+  }
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isCell = v => v && typeof v === 'object' && 'value' in v && 'confidence' in v;
+const confColor = c => c >= 0.85 ? 'var(--verified)' : (c >= 0.5 ? 'var(--review)' : 'var(--fail)');
+
+function cellHTML(name, cell){
+  const v = cell.value;
+  const valHTML = v === null
+    ? `<span class="val null">null — not asserted</span>`
+    : `<span class="val">${esc(typeof v === 'number' ? v.toLocaleString('en-US') : v)}</span>`;
+  const pct = Math.round((cell.confidence||0)*100);
+  const conf = `<div class="conf"><span class="bar"><i style="width:${pct}%;background:${confColor(cell.confidence)}"></i></span>confidence ${cell.confidence}</div>`;
+  const src = cell.source || {};
+  const span = src.text_span
+    ? `<div class="span"><span class="pg">source · page ${src.page}</span>“${esc(src.text_span)}”</div>` : '';
+  const rev = cell.needs_review ? `<div><span class="rev">needs review</span></div>` : '';
+  return `<div class="field"><div class="fname">${esc(name)}${rev}</div><div>${valHTML}${conf}${span}</div></div>`;
+}
+
+function recordHTML(rec){
+  const r = rec._report, st = rec._report.status;
+  const stChip = st === 'review'
+    ? `<span class="chip c-review">Review queue</span>`
+    : `<span class="chip c-indexed">Indexed · verified</span>`;
+  const gates = Object.entries(r.gates).map(([k,v])=>{
+    const cls = v==='pass'?'g-pass':(v==='fail'?'g-fail':'g-na');
+    return `<span class="gate ${cls}">${k.replace('_',' ')}: ${v}</span>`;
+  }).join('');
+
+  let body = '';
+  for (const [k,val] of Object.entries(rec.extraction)){
+    if (isCell(val)) { body += cellHTML(k, val); continue; }
+    if (Array.isArray(val)){
+      val.forEach((cov,i)=>{
+        const label = (cov.coverage_type && cov.coverage_type.value) || `item ${i+1}`;
+        let inner = '';
+        for (const [sk,sc] of Object.entries(cov)) if (isCell(sc)) inner += cellHTML(sk, sc);
+        body += `<div class="cov"><h3>${esc(k)} — ${esc(label)}</h3>${inner}</div>`;
+      });
+    }
+  }
+
+  let diff = '';
+  if (rec.diff && rec.diff.length){
+    diff = `<div class="diff"><div class="dh">Reconciled vs ${esc(rec.prior_doc_id||'prior record')} — ${rec.diff.length} field(s) changed, re-verified</div>` +
+      rec.diff.map(d=>`<div class="drow"><code>${esc(d.field)}</code><div><code class="from">${esc(d.from)}</code> &rarr; <code class="to">${esc(d.to)}</code></div></div>`).join('') +
+      `</div>`;
+  }
+
+  let reasons = '';
+  if (r.reasons && r.reasons.length){
+    reasons = `<ul class="reasons">` + r.reasons.map(x=>`<li>${esc(x)}</li>`).join('') + `</ul>`;
+  }
+
+  return `<section class="card" id="${esc(rec.doc_id)}">
+    <h2>${esc(rec.doc_id)} ${stChip}</h2>
+    <div class="sub">${esc(rec.schema_title||'')} · source: ${esc(rec.source_pdf||'')}</div>
+    <div class="gates">${gates}</div>
+    ${body}${diff}${reasons}
+  </section>`;
+}
+
+document.getElementById('main').innerHTML = RECORDS.map(recordHTML).join('');
+document.getElementById('nav').innerHTML = RECORDS.map(rec=>{
+  const cls = rec._report.status==='review'?'c-review':'c-indexed';
+  const tag = rec._report.status==='review'?'review':'indexed';
+  return `<a href="#${esc(rec.doc_id)}"><span>${esc(rec.doc_id)}</span><span class="chip ${cls}">${tag}</span></a>`;
+}).join('');
+const idx = RECORDS.filter(r=>r._report.status!=='review').length;
+const rev = RECORDS.length - idx;
+document.getElementById('foot').textContent =
+  `${idx} indexed · ${rev} in review queue · synthetic ACORD-style corpus · built with Claude Code + Opus 4.8`;
+</script>
+</body>
+</html>
