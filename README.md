@@ -9,9 +9,10 @@ All application code in this repository (`extract.py`, `verifier.py`, `workflow.
 
 ## Repository layout
 ```
-goal.md                     target + definition of done
-verifier-rubric.md          gates the independent verifier grades against
-notes.md                    on-disk memory (learned extraction rules)
+CLAUDE.md                   project guide (architecture, run, key constraints)
+extract.py verifier.py workflow.py   the pipeline (built during the event)
+pdftext.py normalize.py schema_util.py   shared: PDF→text, normalization, schema walk
+viewer.py                   thin record viewer (source span per field + report + diff)
 config/active.schema.json   active canonical schema (starts = COI)
 config/coi.schema.json      Certificate of Insurance schema
 config/fnol.schema.json     First Notice of Loss schema (swap to re-target)
@@ -19,7 +20,10 @@ config/answer-key.json      ground truth for accuracy grading + expected diff/re
 inbox/                      source PDFs
 index/                      verified records (output)
 review-queue/               flagged low-confidence records (output)
-extract.py verifier.py workflow.py   the pipeline (built during the event)
+.claude/goal.md             target + definition of done
+.claude/verifier-rubric.md  gates the independent verifier grades against
+.claude/notes.md            on-disk memory (learned extraction rules, loaded each step)
+.claude/orchestration-brief.md  design brief   ·   .claude/kickoff-prompt.md  original brief
 ```
 
 ## Run

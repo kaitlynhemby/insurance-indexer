@@ -64,7 +64,7 @@ SYSTEM_PROMPT = (
 # prompt
 # --------------------------------------------------------------------------
 def _read_notes() -> str:
-    path = os.path.join(ROOT, "notes.md")
+    path = os.path.join(ROOT, ".claude", "notes.md")
     if os.path.exists(path):
         with open(path) as fh:
             return fh.read()
@@ -121,7 +121,7 @@ def build_user_prompt(active: dict, doc_text: str, feedback: Optional[str]) -> s
         "  Accident`, Professional=`Each Claim`. NEVER an aggregate, disease, or sub-limit.",
         "- effective/expiration dates come from the coverage's POLICY EFF / POLICY EXP row.",
         "",
-        "LEARNED RULES (notes.md — persistent memory from prior runs):",
+        "LEARNED RULES (.claude/notes.md — persistent memory from prior runs):",
         notes,
     ]
     if feedback:

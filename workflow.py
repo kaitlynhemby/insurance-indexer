@@ -38,7 +38,7 @@ INBOX = os.path.join(ROOT, "inbox")
 INDEX = os.path.join(ROOT, "index")
 REVIEW = os.path.join(ROOT, "review-queue")
 WORK = os.path.join(ROOT, ".work")
-NOTES = os.path.join(ROOT, "notes.md")
+NOTES = os.path.join(ROOT, ".claude", "notes.md")
 MAX_RETRIES = 3
 
 
