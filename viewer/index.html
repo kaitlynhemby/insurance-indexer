@@ -83,7 +83,16 @@
   .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;text-align:center;color:var(--muted)}
   .empty .big{font-family:var(--serif);font-style:italic;font-size:24px;color:var(--ink);margin-bottom:8px}
 
-  .run{padding:30px}
+  .emailcard{margin:18px 22px 0;padding:14px 16px;background:var(--paper2);border:1px solid var(--rule);border-radius:8px}
+  .ec-row{display:flex;gap:10px;align-items:baseline;font-size:13px;margin-bottom:4px}
+  .ec-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-width:52px}
+  .ec-time{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .ec-subj{font-family:var(--serif);font-size:15px}
+  .ec-body{font-size:13px;color:var(--ink);margin:8px 0 10px;line-height:1.5}
+  .ec-att{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--evidence);border:1px solid var(--evidence-line);border-radius:4px;padding:4px 9px;display:inline-flex;align-items:center;gap:8px}
+  .ec-pill{font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+  .ec-pill.indexed{color:var(--verified)} .ec-pill.review{color:var(--review)}
+  .run{padding:24px 28px}
   .run .step-line{display:flex;align-items:center;gap:12px;padding:11px 0;opacity:.3;transition:.3s;font-family:var(--mono);font-size:13px}
   .run .step-line.on{opacity:1}
   .run .step-line .tick{width:18px;height:18px;border-radius:50%;border:2px solid var(--rule);display:grid;place-items:center;flex:0 0 auto}
@@ -235,7 +244,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Insured (Named): Harborview Logistics LLC"
+            "text_span": "INSURED: Harborview Logistics LLC"
           },
           "needs_review": false
         },
@@ -244,25 +253,25 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Producing Agency: Brightline Insurance Brokers"
+            "text_span": "PRODUCER: Brightline Insurance Brokers"
           },
           "needs_review": false
         },
         "insurer_name": {
           "value": "Pacific Crest Mutual Ins Co",
-          "confidence": 0.97,
+          "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Insurer / Carrier: Pacific Crest Mutual Ins Co (NAIC# 27812)"
+            "text_span": "Insurer / Carrier: Pacific Crest Mutual Ins Co"
           },
           "needs_review": false
         },
         "policy_number": {
           "value": "GL-88421",
-          "confidence": 0.98,
+          "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Policy Number: GL-88421"
+            "text_span": "Bound Policy Number: GL-88421"
           },
           "needs_review": false
         },
@@ -271,7 +280,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Effective Date (MM/DD/YYYY): 06/15/2026"
+            "text_span": "BINDER EFFECTIVE (MM/DD/YYYY): 06/15/2026"
           },
           "needs_review": false
         },
@@ -280,16 +289,16 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Expiration Date (MM/DD/YYYY): 07/15/2026"
+            "text_span": "BINDER EXPIRATION (MM/DD/YYYY): 07/15/2026"
           },
           "needs_review": false
         },
         "coverage_type": {
           "value": "general_liability",
-          "confidence": 0.97,
+          "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Coverage Type: Commercial General Liability"
+            "text_span": "Line of Business: Commercial General Liability"
           },
           "needs_review": false
         },
@@ -298,16 +307,16 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Each Occurrence Limit: $2,000,000"
+            "text_span": "Each Occurrence $2,000,000"
           },
           "needs_review": false
         },
         "estimated_premium": {
           "value": 4250,
-          "confidence": 0.97,
+          "confidence": 0.96,
           "source": {
             "page": 1,
-            "text_span": "Premium (estimated): $4,250"
+            "text_span": "Estimated Annual Premium: $4,250"
           },
           "needs_review": false
         },
@@ -316,16 +325,16 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Number: BND-2026-3001"
+            "text_span": "BINDER NO: BND-2026-3001"
           },
           "needs_review": false
         },
         "insurer_naic_number": {
           "value": "27812",
-          "confidence": 0.97,
+          "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "(NAIC# 27812)"
+            "text_span": "NAIC #: 27812"
           },
           "needs_review": false
         },
@@ -334,16 +343,16 @@ const DATA = {
           "confidence": 0.96,
           "source": {
             "page": 1,
-            "text_span": "General Aggregate: $4,000,000"
+            "text_span": "General Aggregate $4,000,000"
           },
           "needs_review": false
         },
         "binder_effective_time": {
           "value": "12:01 AM",
-          "confidence": 0.96,
+          "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Effective Time: 12:01 AM"
+            "text_span": "EFFECTIVE TIME: 12:01 AM"
           },
           "needs_review": false
         },
@@ -352,7 +361,7 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Authorized Representative: Renee Alvarado"
+            "text_span": "AUTHORIZED REPRESENTATIVE: Renee Alvarado"
           },
           "needs_review": false
         }
@@ -402,7 +411,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Insured (Named): Lumen Tech Services"
+            "text_span": "INSURED: Lumen Tech Services"
           },
           "needs_review": false
         },
@@ -411,25 +420,25 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Producing Agency: Anchor Risk Partners"
+            "text_span": "PRODUCER: Anchor Risk Partners"
           },
           "needs_review": false
         },
         "insurer_name": {
           "value": "Beacon Professional Indemnity",
-          "confidence": 0.97,
+          "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Insurer / Carrier: Beacon Professional Indemnity (NAIC# 41209)"
+            "text_span": "Insurer / Carrier: Beacon Professional Indemnity"
           },
           "needs_review": false
         },
         "policy_number": {
           "value": "PL-11920",
-          "confidence": 0.98,
+          "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Policy Number: PL-11920"
+            "text_span": "Bound Policy Number: PL-11920"
           },
           "needs_review": false
         },
@@ -438,7 +447,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Effective Date (MM/DD/YYYY): 06/20/2026"
+            "text_span": "BINDER EFFECTIVE (MM/DD/YYYY): 06/20/2026"
           },
           "needs_review": false
         },
@@ -447,7 +456,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Expiration Date (MM/DD/YYYY): 07/20/2026"
+            "text_span": "BINDER EXPIRATION (MM/DD/YYYY): 07/20/2026"
           },
           "needs_review": false
         },
@@ -456,7 +465,7 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Coverage Type: Professional Liability (E&O)"
+            "text_span": "Line of Business: Professional Liability (E&O)"
           },
           "needs_review": false
         },
@@ -465,16 +474,16 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Each Claim Limit: $3,000,000"
+            "text_span": "Each Claim $3,000,000"
           },
           "needs_review": false
         },
         "estimated_premium": {
           "value": 7900,
-          "confidence": 0.97,
+          "confidence": 0.96,
           "source": {
             "page": 1,
-            "text_span": "Premium (estimated): $7,900"
+            "text_span": "Estimated Annual Premium: $7,900"
           },
           "needs_review": false
         },
@@ -483,7 +492,7 @@ const DATA = {
           "confidence": 0.98,
           "source": {
             "page": 1,
-            "text_span": "Binder Number: BND-2026-3002"
+            "text_span": "BINDER NO: BND-2026-3002"
           },
           "needs_review": false
         },
@@ -492,7 +501,7 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "(NAIC# 41209)"
+            "text_span": "NAIC #: 41209"
           },
           "needs_review": false
         },
@@ -501,16 +510,16 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Aggregate: $6,000,000"
+            "text_span": "Aggregate $6,000,000"
           },
           "needs_review": false
         },
         "binder_effective_time": {
           "value": "12:01 AM",
-          "confidence": 0.97,
+          "confidence": 0.96,
           "source": {
             "page": 1,
-            "text_span": "Effective Time: 12:01 AM"
+            "text_span": "EFFECTIVE TIME: 12:01 AM"
           },
           "needs_review": false
         },
@@ -519,7 +528,7 @@ const DATA = {
           "confidence": 0.97,
           "source": {
             "page": 1,
-            "text_span": "Authorized Representative: David Okafor"
+            "text_span": "AUTHORIZED REPRESENTATIVE: David Okafor"
           },
           "needs_review": false
         }
@@ -1726,8 +1735,9 @@ const DATA = {
     {
       "from_name": "Brightline Insurance Brokers",
       "from_email": "certs@brightline.example",
-      "subject": "Insurance binder \u2014 Harborview Logistics LLC",
-      "preview": "Please find attached the insurance binder for Harborview Logistics LLC. Let us know if you need anything else.",
+      "subject": "Bind request \u2014 Harborview Logistics LLC (general liability, eff 2026-06-15)",
+      "preview": "Please bind the attached for Harborview Logistics LLC: general liability, $2,000,000 per occurrence / each claim, carrier Pacific Crest Mutual Ins Co. Binder BND-2026-3001 effective 2026-06-15 through 2026-07-15. Estimated premium $4,250. Confirm and issue.",
+      "body": "Please bind the attached for Harborview Logistics LLC: general liability, $2,000,000 per occurrence / each claim, carrier Pacific Crest Mutual Ins Co. Binder BND-2026-3001 effective 2026-06-15 through 2026-07-15. Estimated premium $4,250. Confirm and issue.",
       "time": "08:51",
       "attachment": "BINDER-3001_Harborview.pdf",
       "doc_id": "BINDER-3001_Harborview"
@@ -1735,8 +1745,9 @@ const DATA = {
     {
       "from_name": "Anchor Risk Partners",
       "from_email": "submissions@anchorrisk.example",
-      "subject": "Insurance binder \u2014 Lumen Tech Services",
-      "preview": "Please find attached the insurance binder for Lumen Tech Services. Let us know if you need anything else.",
+      "subject": "Bind request \u2014 Lumen Tech Services (professional liability, eff 2026-06-20)",
+      "preview": "Please bind the attached for Lumen Tech Services: professional liability, $3,000,000 per occurrence / each claim, carrier Beacon Professional Indemnity. Binder BND-2026-3002 effective 2026-06-20 through 2026-07-20. Estimated premium $7,900. Confirm and issue.",
+      "body": "Please bind the attached for Lumen Tech Services: professional liability, $3,000,000 per occurrence / each claim, carrier Beacon Professional Indemnity. Binder BND-2026-3002 effective 2026-06-20 through 2026-07-20. Estimated premium $7,900. Confirm and issue.",
       "time": "09:03",
       "attachment": "BINDER-3002_Lumen.pdf",
       "doc_id": "BINDER-3002_Lumen"
@@ -1744,8 +1755,9 @@ const DATA = {
     {
       "from_name": "Brightline Insurance Brokers",
       "from_email": "certs@brightline.example",
-      "subject": "Certificate of insurance \u2014 Harborview Logistics LLC",
-      "preview": "Please find attached the certificate of insurance for Harborview Logistics LLC. Let us know if you need anything else.",
+      "subject": "Certificate of insurance \u2014 Harborview Logistics LLC for Cascade Property Group",
+      "preview": "Attached is the certificate of insurance for Harborview Logistics LLC, naming Cascade Property Group as certificate holder. Coverages: general liability $2,000,000; auto liability $1,000,000. Issued 2026-05-14. Let us know if anything else is required.",
+      "body": "Attached is the certificate of insurance for Harborview Logistics LLC, naming Cascade Property Group as certificate holder. Coverages: general liability $2,000,000; auto liability $1,000,000. Issued 2026-05-14. Let us know if anything else is required.",
       "time": "09:17",
       "attachment": "COI-1001_Harborview.pdf",
       "doc_id": "COI-1001_Harborview"
@@ -1753,8 +1765,9 @@ const DATA = {
     {
       "from_name": "Brightline Insurance Brokers",
       "from_email": "certs@brightline.example",
-      "subject": "Certificate of insurance \u2014 Harborview Logistics LLC",
-      "preview": "Please find attached the certificate of insurance for Harborview Logistics LLC. Let us know if you need anything else.",
+      "subject": "Certificate of insurance \u2014 Harborview Logistics LLC for Cascade Property Group",
+      "preview": "Attached is the certificate of insurance for Harborview Logistics LLC, naming Cascade Property Group as certificate holder. Coverages: general liability $3,000,000; auto liability $1,000,000. Issued 2026-06-10. Let us know if anything else is required.",
+      "body": "Attached is the certificate of insurance for Harborview Logistics LLC, naming Cascade Property Group as certificate holder. Coverages: general liability $3,000,000; auto liability $1,000,000. Issued 2026-06-10. Let us know if anything else is required.",
       "time": "09:32",
       "attachment": "COI-1001_Harborview_UPDATED.pdf",
       "doc_id": "COI-1001_Harborview_UPDATED"
@@ -1762,8 +1775,9 @@ const DATA = {
     {
       "from_name": "Anchor Risk Partners",
       "from_email": "submissions@anchorrisk.example",
-      "subject": "Certificate of insurance \u2014 Sierra Stoneworks Inc.",
-      "preview": "Please find attached the certificate of insurance for Sierra Stoneworks Inc.. Let us know if you need anything else.",
+      "subject": "Certificate of insurance \u2014 Sierra Stoneworks Inc. for Meridian Builders",
+      "preview": "Attached is the certificate of insurance for Sierra Stoneworks Inc., naming Meridian Builders as certificate holder. Coverages: general liability $1,000,000; umbrella $5,000,000; workers comp $1,000,000. Issued 2026-04-02. Let us know if anything else is required.",
+      "body": "Attached is the certificate of insurance for Sierra Stoneworks Inc., naming Meridian Builders as certificate holder. Coverages: general liability $1,000,000; umbrella $5,000,000; workers comp $1,000,000. Issued 2026-04-02. Let us know if anything else is required.",
       "time": "09:46",
       "attachment": "COI-1002_Sierra.pdf",
       "doc_id": "COI-1002_Sierra"
@@ -1771,8 +1785,9 @@ const DATA = {
     {
       "from_name": "Brightline Insurance Brokers",
       "from_email": "certs@brightline.example",
-      "subject": "Certificate of insurance \u2014 Lumen Tech Services",
-      "preview": "Please find attached the certificate of insurance for Lumen Tech Services. Let us know if you need anything else.",
+      "subject": "Certificate of insurance \u2014 Lumen Tech Services for Northgate Plaza Associates",
+      "preview": "Attached is the certificate of insurance for Lumen Tech Services, naming Northgate Plaza Associates as certificate holder. Coverages: general liability $2,000,000; professional liability $3,000,000. Issued 2026-06-01. Let us know if anything else is required.",
+      "body": "Attached is the certificate of insurance for Lumen Tech Services, naming Northgate Plaza Associates as certificate holder. Coverages: general liability $2,000,000; professional liability $3,000,000. Issued 2026-06-01. Let us know if anything else is required.",
       "time": "10:08",
       "attachment": "COI-1003_Lumen.pdf",
       "doc_id": "COI-1003_Lumen"
@@ -1780,8 +1795,9 @@ const DATA = {
     {
       "from_name": "Harborview Logistics LLC",
       "from_email": "claims-intake@harborview.example",
-      "subject": "FNOL \u2014 new loss reported \u00b7 Harborview Logistics LLC",
-      "preview": "Attaching the first-notice-of-loss packet for the incident below. Please set up the claim.",
+      "subject": "FNOL \u2014 Harborview Logistics LLC \u00b7 auto loss 2026-05-30",
+      "preview": "Reporting a new auto for Harborview Logistics LLC on policy POL-44821. Date of loss 2026-05-30 at I-90 near Exit 34, Issaquah WA. Reported by Marcus Lee (Fleet Manager). Estimated severity medium. Full packet attached \u2014 please set up the claim.",
+      "body": "Reporting a new auto for Harborview Logistics LLC on policy POL-44821. Date of loss 2026-05-30 at I-90 near Exit 34, Issaquah WA. Reported by Marcus Lee (Fleet Manager). Estimated severity medium. Full packet attached \u2014 please set up the claim.",
       "time": "10:21",
       "attachment": "FNOL-2001_Harborview.pdf",
       "doc_id": "FNOL-2001_Harborview"
@@ -1789,8 +1805,9 @@ const DATA = {
     {
       "from_name": "Sierra Stoneworks Inc.",
       "from_email": "claims-intake@harborview.example",
-      "subject": "FNOL \u2014 new loss reported \u00b7 Sierra Stoneworks Inc.",
-      "preview": "Attaching the first-notice-of-loss packet for the incident below. Please set up the claim.",
+      "subject": "FNOL \u2014 Sierra Stoneworks Inc. \u00b7 property loss 2026-04-18",
+      "preview": "Reporting a new property for Sierra Stoneworks Inc. on policy POL-90233. Date of loss 2026-04-18 at Warehouse B, 1420 Quarry Rd, Tacoma WA. Reported by Elena Cruz (Site Supervisor). Estimated severity high. Full packet attached \u2014 please set up the claim.",
+      "body": "Reporting a new property for Sierra Stoneworks Inc. on policy POL-90233. Date of loss 2026-04-18 at Warehouse B, 1420 Quarry Rd, Tacoma WA. Reported by Elena Cruz (Site Supervisor). Estimated severity high. Full packet attached \u2014 please set up the claim.",
       "time": "10:39",
       "attachment": "FNOL-2002_Sierra.pdf",
       "doc_id": "FNOL-2002_Sierra"
@@ -1798,8 +1815,9 @@ const DATA = {
     {
       "from_name": "Anchor Risk Partners",
       "from_email": "submissions@anchorrisk.example",
-      "subject": "Certificate of insurance \u2014 Pinecrest Catering Co.",
-      "preview": "Please find attached the certificate of insurance for Pinecrest Catering Co.. Let us know if you need anything else.",
+      "subject": "Certificate of insurance \u2014 Pinecrest Catering Co. for Evently Venues LLC",
+      "preview": "Attached is the certificate of insurance for Pinecrest Catering Co., naming Evently Venues LLC as certificate holder. Coverages: general liability. Issued \u2014. Let us know if anything else is required.",
+      "body": "Attached is the certificate of insurance for Pinecrest Catering Co., naming Evently Venues LLC as certificate holder. Coverages: general liability. Issued \u2014. Let us know if anything else is required.",
       "time": "10:55",
       "attachment": "COI-SCAN_Pinecrest.pdf",
       "doc_id": "COI-SCAN_Pinecrest"
@@ -1808,6 +1826,7 @@ const DATA = {
 };
 const RECORDS = DATA.records, EMAILS = DATA.emails;
 const byId = {}; RECORDS.forEach(r => byId[r.doc_id] = r);
+const emailById = {}; EMAILS.forEach(e => emailById[e.doc_id] = e);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isCell = v => v && typeof v === 'object' && 'value' in v && 'confidence' in v;
 const confColor = c => c >= .85 ? 'var(--verified)' : (c >= .5 ? 'var(--review)' : 'var(--fail)');
@@ -1839,11 +1858,23 @@ function renderInbox(){
   inbox.querySelectorAll('.email').forEach(b => b.addEventListener('click', () => openEmail(b.dataset.id, b)));
 }
 
-/* ---------- pipeline-run animation, then the record ---------- */
+/* ---------- the email itself (its subject + body carry real detail) ---------- */
+function emailCardHTML(e){
+  const r = byId[e.doc_id], st = r._report.status;
+  return `<div class="emailcard">
+    <div class="ec-row"><span class="ec-k">From</span><span>${esc(e.from_name)} &lt;${esc(e.from_email)}&gt;</span><span class="ec-time">${esc(e.time)}</span></div>
+    <div class="ec-row"><span class="ec-k">Subject</span><span class="ec-subj">${esc(e.subject)}</span></div>
+    <div class="ec-body">${esc(e.body||e.preview||'')}</div>
+    <div class="ec-att">📎 ${esc(e.attachment)} <span class="ec-pill ${st==='review'?'review':'indexed'}">${st==='review'?'→ review queue':'→ indexed'}</span></div>
+  </div>`;
+}
+
+/* ---------- open email → pipeline-run animation → the record ---------- */
 function openEmail(docId, btn){
   document.querySelectorAll('.email').forEach(e=>e.classList.remove('sel'));
   if (btn) btn.classList.add('sel');
   const rec = byId[docId], review = rec._report.status === 'review';
+  const email = emailById[docId] || {};
   const steps = [
     'Reading attachment ('+ (rec.source_pdf||'').split('/').pop() +')',
     'Extracting fields to the schema envelope',
@@ -1851,8 +1882,10 @@ function openEmail(docId, btn){
     review ? 'Low-confidence fields caught → routed to review-queue' : 'All gates pass → routed to index'
   ];
   const stage = document.getElementById('stage');
-  stage.innerHTML = `<div class="run" id="run">`+steps.map((s,i)=>
-    `<div class="step-line" data-i="${i}"><span class="tick">${i+1}</span><span>${esc(s)}</span></div>`).join('')+`</div>`;
+  stage.scrollTop = 0;
+  stage.innerHTML = emailCardHTML(email)
+    + `<div id="recslot"><div class="run" id="run">`+steps.map((s,i)=>
+      `<div class="step-line" data-i="${i}"><span class="tick">${i+1}</span><span>${esc(s)}</span></div>`).join('')+`</div></div>`;
   const lines = [...stage.querySelectorAll('.step-line')];
   let i = 0;
   (function tick(){
@@ -1903,7 +1936,8 @@ function renderRecord(rec){
   if(rec.diff&&rec.diff.length){diff=`<div class="diff"><div class="dh">Reconciled vs ${esc(rec.prior_doc_id||'prior')} — ${rec.diff.length} field(s) changed &amp; re-verified</div>`+
     rec.diff.map(d=>`<div class="drow"><code>${esc(d.field)}</code><div><code class="from-v">${esc(fmt(d.from))}</code> → <code class="to-v">${esc(fmt(d.to))}</code></div></div>`).join('')+`</div>`;}
   let reasons=''; if(r.reasons&&r.reasons.length) reasons=`<ul class="reasons">`+r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')+`</ul>`;
-  document.getElementById('stage').innerHTML = `<div class="sheet">
+  const target = document.getElementById('recslot') || document.getElementById('stage');
+  target.innerHTML = `<div class="sheet">
     <h2 class="rec">${esc(rec.doc_id)} ${badge}</h2>
     <div class="src"><span class="type">${esc(typeLabel(rec.schema_title))}</span> &nbsp;·&nbsp; ${esc(rec.source_pdf||'')}</div>
     ${routing}<div class="gates">${gates}</div>${body}${diff}${reasons}</div>`;

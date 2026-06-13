@@ -61,8 +61,23 @@ def _values(rec):
         return {}
 
 
+def _money(x):
+    return f"${x:,.0f}" if isinstance(x, (int, float)) else (str(x) if x else "")
+
+
+def _coverage_summary(v):
+    parts = []
+    for c in (v.get("coverages") or []):
+        ct = (c.get("coverage_type") or "").replace("_", " ")
+        lim = _money(c.get("limit"))
+        if ct:
+            parts.append((ct + (f" {lim}" if lim else "")).strip())
+    return "; ".join(parts)
+
+
 def _emails(records):
-    """Synthesize a plausible inbound email per record (fakes the email layer)."""
+    """Synthesize a plausible inbound email per record — subject + body carry real
+    detail (the way real submission/claims emails do), fakes the email layer."""
     times = ["08:51", "09:03", "09:17", "09:32", "09:46", "10:08", "10:21", "10:39", "10:55"]
     out = []
     for i, rec in enumerate(records):
@@ -72,21 +87,40 @@ def _emails(records):
         if title == "FirstNoticeOfLoss":
             who = v.get("policyholder_name") or "Policyholder"
             sender, email = who, "claims-intake@harborview.example"
-            subject = f"FNOL — new loss reported · {who}"
-            preview = "Attaching the first-notice-of-loss packet for the incident below. Please set up the claim."
-        else:
+            lt = (v.get("loss_type") or "").replace("_", " ")
+            subject = f"FNOL — {who} · {lt} loss {v.get('loss_date','')}".strip()
+            body = (f"Reporting a new {lt or 'loss'} for {who} on policy {v.get('policy_number','—')}. "
+                    f"Date of loss {v.get('loss_date','—')} at {v.get('loss_location','—')}. "
+                    f"Reported by {v.get('reported_by','the insured')}. Estimated severity "
+                    f"{v.get('estimated_severity','—')}. Full packet attached — please set up the claim.")
+        elif title == "InsuranceBinder":
+            who = v.get("producing_agency") or "Insurance Brokers"
+            email = _SENDER_EMAIL.get(who, "submissions@broker.example")
+            sender = who
+            insured = v.get("insured_name") or "the insured"
+            lob = (v.get("coverage_type") or "coverage").replace("_", " ")
+            subject = f"Bind request — {insured} ({lob}, eff {v.get('binder_effective_date','')})".strip()
+            body = (f"Please bind the attached for {insured}: {lob}, "
+                    f"{_money(v.get('coverage_limit'))} per occurrence / each claim, carrier "
+                    f"{v.get('insurer_name','—')}. Binder {v.get('binder_number','—')} effective "
+                    f"{v.get('binder_effective_date','—')} through {v.get('binder_expiration_date','—')}. "
+                    f"Estimated premium {_money(v.get('estimated_premium'))}. Confirm and issue.")
+        else:  # COI
             who = v.get("producer") or v.get("producing_agency") or "Insurance Brokers"
             email = _SENDER_EMAIL.get(who, "submissions@broker.example")
             sender = who
             insured = v.get("insured_name") or "the insured"
-            kind = {"CertificateOfInsurance": "Certificate of insurance",
-                    "InsuranceBinder": "Insurance binder"}.get(title, "Insurance document")
-            subject = f"{kind} — {insured}"
-            preview = f"Please find attached the {kind.lower()} for {insured}. Let us know if you need anything else."
+            holder = v.get("certificate_holder")
+            subject = f"Certificate of insurance — {insured}" + (f" for {holder}" if holder else "")
+            cov = _coverage_summary(v)
+            body = (f"Attached is the certificate of insurance for {insured}"
+                    + (f", naming {holder} as certificate holder" if holder else "") + ". "
+                    + (f"Coverages: {cov}. " if cov else "")
+                    + f"Issued {v.get('issue_date','—')}. Let us know if anything else is required.")
         out.append({
             "from_name": sender, "from_email": email, "subject": subject,
-            "preview": preview, "time": times[i % len(times)], "attachment": attach,
-            "doc_id": rec["doc_id"],
+            "preview": body, "body": body, "time": times[i % len(times)],
+            "attachment": attach, "doc_id": rec["doc_id"],
         })
     return out
 
@@ -192,7 +226,16 @@ _TEMPLATE = r"""<!doctype html>
   .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;text-align:center;color:var(--muted)}
   .empty .big{font-family:var(--serif);font-style:italic;font-size:24px;color:var(--ink);margin-bottom:8px}
 
-  .run{padding:30px}
+  .emailcard{margin:18px 22px 0;padding:14px 16px;background:var(--paper2);border:1px solid var(--rule);border-radius:8px}
+  .ec-row{display:flex;gap:10px;align-items:baseline;font-size:13px;margin-bottom:4px}
+  .ec-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-width:52px}
+  .ec-time{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .ec-subj{font-family:var(--serif);font-size:15px}
+  .ec-body{font-size:13px;color:var(--ink);margin:8px 0 10px;line-height:1.5}
+  .ec-att{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--evidence);border:1px solid var(--evidence-line);border-radius:4px;padding:4px 9px;display:inline-flex;align-items:center;gap:8px}
+  .ec-pill{font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+  .ec-pill.indexed{color:var(--verified)} .ec-pill.review{color:var(--review)}
+  .run{padding:24px 28px}
   .run .step-line{display:flex;align-items:center;gap:12px;padding:11px 0;opacity:.3;transition:.3s;font-family:var(--mono);font-size:13px}
   .run .step-line.on{opacity:1}
   .run .step-line .tick{width:18px;height:18px;border-radius:50%;border:2px solid var(--rule);display:grid;place-items:center;flex:0 0 auto}
@@ -325,6 +368,7 @@ _TEMPLATE = r"""<!doctype html>
 const DATA = /*DATA*/;
 const RECORDS = DATA.records, EMAILS = DATA.emails;
 const byId = {}; RECORDS.forEach(r => byId[r.doc_id] = r);
+const emailById = {}; EMAILS.forEach(e => emailById[e.doc_id] = e);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isCell = v => v && typeof v === 'object' && 'value' in v && 'confidence' in v;
 const confColor = c => c >= .85 ? 'var(--verified)' : (c >= .5 ? 'var(--review)' : 'var(--fail)');
@@ -356,11 +400,23 @@ function renderInbox(){
   inbox.querySelectorAll('.email').forEach(b => b.addEventListener('click', () => openEmail(b.dataset.id, b)));
 }
 
-/* ---------- pipeline-run animation, then the record ---------- */
+/* ---------- the email itself (its subject + body carry real detail) ---------- */
+function emailCardHTML(e){
+  const r = byId[e.doc_id], st = r._report.status;
+  return `<div class="emailcard">
+    <div class="ec-row"><span class="ec-k">From</span><span>${esc(e.from_name)} &lt;${esc(e.from_email)}&gt;</span><span class="ec-time">${esc(e.time)}</span></div>
+    <div class="ec-row"><span class="ec-k">Subject</span><span class="ec-subj">${esc(e.subject)}</span></div>
+    <div class="ec-body">${esc(e.body||e.preview||'')}</div>
+    <div class="ec-att">📎 ${esc(e.attachment)} <span class="ec-pill ${st==='review'?'review':'indexed'}">${st==='review'?'→ review queue':'→ indexed'}</span></div>
+  </div>`;
+}
+
+/* ---------- open email → pipeline-run animation → the record ---------- */
 function openEmail(docId, btn){
   document.querySelectorAll('.email').forEach(e=>e.classList.remove('sel'));
   if (btn) btn.classList.add('sel');
   const rec = byId[docId], review = rec._report.status === 'review';
+  const email = emailById[docId] || {};
   const steps = [
     'Reading attachment ('+ (rec.source_pdf||'').split('/').pop() +')',
     'Extracting fields to the schema envelope',
@@ -368,8 +424,10 @@ function openEmail(docId, btn){
     review ? 'Low-confidence fields caught → routed to review-queue' : 'All gates pass → routed to index'
   ];
   const stage = document.getElementById('stage');
-  stage.innerHTML = `<div class="run" id="run">`+steps.map((s,i)=>
-    `<div class="step-line" data-i="${i}"><span class="tick">${i+1}</span><span>${esc(s)}</span></div>`).join('')+`</div>`;
+  stage.scrollTop = 0;
+  stage.innerHTML = emailCardHTML(email)
+    + `<div id="recslot"><div class="run" id="run">`+steps.map((s,i)=>
+      `<div class="step-line" data-i="${i}"><span class="tick">${i+1}</span><span>${esc(s)}</span></div>`).join('')+`</div></div>`;
   const lines = [...stage.querySelectorAll('.step-line')];
   let i = 0;
   (function tick(){
@@ -420,7 +478,8 @@ function renderRecord(rec){
   if(rec.diff&&rec.diff.length){diff=`<div class="diff"><div class="dh">Reconciled vs ${esc(rec.prior_doc_id||'prior')} — ${rec.diff.length} field(s) changed &amp; re-verified</div>`+
     rec.diff.map(d=>`<div class="drow"><code>${esc(d.field)}</code><div><code class="from-v">${esc(fmt(d.from))}</code> → <code class="to-v">${esc(fmt(d.to))}</code></div></div>`).join('')+`</div>`;}
   let reasons=''; if(r.reasons&&r.reasons.length) reasons=`<ul class="reasons">`+r.reasons.map(x=>`<li>${esc(x)}</li>`).join('')+`</ul>`;
-  document.getElementById('stage').innerHTML = `<div class="sheet">
+  const target = document.getElementById('recslot') || document.getElementById('stage');
+  target.innerHTML = `<div class="sheet">
     <h2 class="rec">${esc(rec.doc_id)} ${badge}</h2>
     <div class="src"><span class="type">${esc(typeLabel(rec.schema_title))}</span> &nbsp;·&nbsp; ${esc(rec.source_pdf||'')}</div>
     ${routing}<div class="gates">${gates}</div>${body}${diff}${reasons}</div>`;

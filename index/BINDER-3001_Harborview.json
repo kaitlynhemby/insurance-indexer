@@ -18,7 +18,7 @@
       "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Insured (Named): Harborview Logistics LLC"
+        "text_span": "INSURED: Harborview Logistics LLC"
       },
       "needs_review": false
     },
@@ -27,25 +27,25 @@
       "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Producing Agency: Brightline Insurance Brokers"
+        "text_span": "PRODUCER: Brightline Insurance Brokers"
       },
       "needs_review": false
     },
     "insurer_name": {
       "value": "Pacific Crest Mutual Ins Co",
-      "confidence": 0.97,
+      "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Insurer / Carrier: Pacific Crest Mutual Ins Co (NAIC# 27812)"
+        "text_span": "Insurer / Carrier: Pacific Crest Mutual Ins Co"
       },
       "needs_review": false
     },
     "policy_number": {
       "value": "GL-88421",
-      "confidence": 0.98,
+      "confidence": 0.97,
       "source": {
         "page": 1,
-        "text_span": "Policy Number: GL-88421"
+        "text_span": "Bound Policy Number: GL-88421"
       },
       "needs_review": false
     },
@@ -54,7 +54,7 @@
       "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Binder Effective Date (MM/DD/YYYY): 06/15/2026"
+        "text_span": "BINDER EFFECTIVE (MM/DD/YYYY): 06/15/2026"
       },
       "needs_review": false
     },
@@ -63,16 +63,16 @@
       "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Binder Expiration Date (MM/DD/YYYY): 07/15/2026"
+        "text_span": "BINDER EXPIRATION (MM/DD/YYYY): 07/15/2026"
       },
       "needs_review": false
     },
     "coverage_type": {
       "value": "general_liability",
-      "confidence": 0.97,
+      "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Coverage Type: Commercial General Liability"
+        "text_span": "Line of Business: Commercial General Liability"
       },
       "needs_review": false
     },
@@ -81,16 +81,16 @@
       "confidence": 0.97,
       "source": {
         "page": 1,
-        "text_span": "Each Occurrence Limit: $2,000,000"
+        "text_span": "Each Occurrence $2,000,000"
       },
       "needs_review": false
     },
     "estimated_premium": {
       "value": 4250,
-      "confidence": 0.97,
+      "confidence": 0.96,
       "source": {
         "page": 1,
-        "text_span": "Premium (estimated): $4,250"
+        "text_span": "Estimated Annual Premium: $4,250"
       },
       "needs_review": false
     },
@@ -99,16 +99,16 @@
       "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "Binder Number: BND-2026-3001"
+        "text_span": "BINDER NO: BND-2026-3001"
       },
       "needs_review": false
     },
     "insurer_naic_number": {
       "value": "27812",
-      "confidence": 0.97,
+      "confidence": 0.98,
       "source": {
         "page": 1,
-        "text_span": "(NAIC# 27812)"
+        "text_span": "NAIC #: 27812"
       },
       "needs_review": false
     },
@@ -117,16 +117,16 @@
       "confidence": 0.96,
       "source": {
         "page": 1,
-        "text_span": "General Aggregate: $4,000,000"
+        "text_span": "General Aggregate $4,000,000"
       },
       "needs_review": false
     },
     "binder_effective_time": {
       "value": "12:01 AM",
-      "confidence": 0.96,
+      "confidence": 0.97,
       "source": {
         "page": 1,
-        "text_span": "Effective Time: 12:01 AM"
+        "text_span": "EFFECTIVE TIME: 12:01 AM"
       },
       "needs_review": false
     },
@@ -135,7 +135,7 @@
       "confidence": 0.97,
       "source": {
         "page": 1,
-        "text_span": "Authorized Representative: Renee Alvarado"
+        "text_span": "AUTHORIZED REPRESENTATIVE: Renee Alvarado"
       },
       "needs_review": false
     }
