@@ -67,9 +67,11 @@ SUPPORTED_SHAPE_RULES = (
     "- Dates: type:string + format:date (values normalize to YYYY-MM-DD). Money/limits: type:number "
     "(plain integers). A 'document_type' const field is conventional.\n"
     "- FORBIDDEN: $ref, oneOf/anyOf/allOf, if/then/else/not, nested objects, arrays of scalars, or any "
-    "nesting beyond one array-of-objects level."
+    "nesting beyond one array-of-objects level.\n"
+    "- If the document has SEVERAL repeating sub-records (e.g. property locations AND a claims list), "
+    "model only the SINGLE most-repeating one as the array-of-objects and flatten the rest to scalars — "
+    "the schema allows exactly ONE array."
 )
-
 
 # --------------------------------------------------------------------------
 # helpers

@@ -7,6 +7,14 @@ Persistent, file-based memory so the loop re-derives nothing and survives restar
 - `limit` = the PRIMARY per-occurrence limit only (see `config/answer-key.json` `_comment` for the per-coverage mapping).
 - Ignore the distractors listed in `goal.md` (revision/printed/signature dates, prior-carrier/quote/cert/claim/police numbers, additional-insured names, aggregate sub-limits).
 
+## Cross-line field disambiguation (applies to any insurance doc type)
+- **Per-occurrence / each-claim limit ≠ aggregate limit.** Per-occurrence (`Each Occurrence`, `Combined Single Limit`, `E.L. Each Accident`, `Each Claim`) is the max for one event; aggregate (`General Aggregate`, `Aggregate`, `Products-Comp/Op Agg`) is the cap across the whole term. The headline `*_limit` is the per-occurrence one; capture aggregate only in a field explicitly named for it.
+- **Claims-made vs occurrence:** a claims-made policy has a `Retroactive Date` — capture it as `format:date` when present; occurrence policies do not.
+- **Deductible ≠ Self-Insured Retention (SIR):** both are insured-pays-first amounts but distinct fields; don't merge.
+- **Named Insured ≠ Additional Insured:** capture the named insured (the policyholder), never the additional-insured / certificate-holder / project-owner.
+- **NAIC # is the carrier identifier**, never a policy number; **SIC/NAICS** are the insured's industry codes, not coverage data.
+- Document types are distinct: a **Binder** (temporary proof, has effective/expiration), a **Dec Page** (policy summary), and a **Certificate of Insurance** (third-party evidence) carry overlapping fields but are different `document_type`s.
+
 ## Certificate of Insurance (COI)
 - `issue_date` = the header `DATE ISSUED (MM/DD/YYYY)` value ONLY. Not `REVISION DATE`, not `FORM PRINTED`, not the page-2 signature `Date:` (they often share or nearly share the value — don't be fooled).
 - `policy_number` / `effective_date` / `expiration_date` come from each coverage's `POLICY NUMBER` / `POLICY EFF` / `POLICY EXP` row. NOT `CERTIFICATE NUMBER` (CRT-…), `MASTER QUOTE REF` (Q-…), `NAIC #`, `REVISION`, or a prior-carrier policy named in the Description of Operations (e.g. "Prior carrier: … policy EI-99001").
@@ -22,6 +30,13 @@ Persistent, file-based memory so the loop re-derives nothing and survives restar
 - `claimant_name` verbatim, including "N/A (first-party)" when the loss is first-party.
 - `estimated_severity` = the `Estimated Severity` word, lowercased (low/medium/high/unknown).
 - `loss_description` = the full DESCRIPTION OF LOSS / NARRATIVE paragraph, verbatim (whitespace will be normalized for grounding).
+
+## Insurance Binder (validated against samples_binder/ indexed records)
+- `binder_number` = `Binder Number: BND-…` — a reference id, NOT `policy_number` (the `Policy Number: GL-/PL-…` of the bound policy).
+- `coverage_limit` = the primary `Each Occurrence Limit` (GL) / `Each Claim Limit` (E&O); `aggregate_limit` = the separate `General Aggregate`/`Aggregate` line. Don't swap them.
+- `insurer_naic_number` = the carrier's `NAIC#` (e.g. 27812), not a policy id.
+- A binder has `Binder Effective Date` / `Binder Expiration Date` and a signing `Date:` — there is NO separate "date issued"; do not invent an `issue_date`.
+- `coverage_type` from `Coverage Type:` (Commercial General Liability→general_liability, Professional Liability (E&O)→professional_liability, etc.).
 
 - [Certificate of Insurance (COI)] COI-SCAN_Pinecrest: fixed on retry — verifier flagged: GATE1/4 coverages[0].limit: amount 1000000 not derivable from span 'Hach Occurrence $1.000.000'; GATE2 (root): 'issue_date' is a required property; GATE2 coverages/0: 'effective_date' is a required property. Re-confirmed grounding/normalization before indexing.
 
