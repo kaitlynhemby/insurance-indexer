@@ -1,0 +1,34 @@
+# Self-Verifying Insurance Document Indexer
+
+Built during the Build Day event using **Claude Code + Claude Opus 4.8**.
+
+**What it does:** turns emailed insurance PDFs (certificates of insurance, first-notice-of-loss packets) into structured, verified records. Every field traces back to its source span, low-confidence fields route themselves to a human review queue, the index updates and re-verifies as new documents arrive, and a single config file re-targets the whole pipeline to any insurance document type.
+
+## Original work statement
+All application code in this repository (`extract.py`, `verifier.py`, `workflow.py`, and any viewer) was written from scratch **during the event**. The document corpus under `inbox/` is **synthetic and fictional** — no real client data, names, or proprietary assets are used.
+
+## Repository layout
+```
+goal.md                     target + definition of done
+verifier-rubric.md          gates the independent verifier grades against
+notes.md                    on-disk memory (learned extraction rules)
+config/active.schema.json   active canonical schema (starts = COI)
+config/coi.schema.json      Certificate of Insurance schema
+config/fnol.schema.json     First Notice of Loss schema (swap to re-target)
+config/answer-key.json      ground truth for accuracy grading + expected diff/review
+inbox/                      source PDFs
+index/                      verified records (output)
+review-queue/               flagged low-confidence records (output)
+extract.py verifier.py workflow.py   the pipeline (built during the event)
+```
+
+## Run
+```bash
+pip install pdfplumber jsonschema pytesseract pdf2image
+# system packages: tesseract-ocr, poppler-utils  (only needed for the one scanned PDF)
+python workflow.py     # watches inbox/, extracts, verifies, routes to index/ or review-queue/
+python verifier.py     # grades the labeled set; exits 0 when DONE
+```
+
+## "Done" is verifiable without a human
+`verifier.py` exits `0` on the labeled held-out set: 100% grounded, 100% schema-valid, accuracy == 100%, and every low-confidence field correctly routed to `review-queue/`. Re-target to a new document type by replacing `config/active.schema.json` — no code change.

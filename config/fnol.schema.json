@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FirstNoticeOfLoss",
+  "type": "object",
+  "required": ["document_type", "policy_number", "loss_date", "loss_description", "reported_by"],
+  "properties": {
+    "document_type":      { "const": "first_notice_of_loss" },
+    "policy_number":      { "type": "string" },
+    "policyholder_name":  { "type": "string" },
+    "loss_date":          { "type": "string", "format": "date" },
+    "report_date":        { "type": "string", "format": "date" },
+    "loss_type":          { "type": "string", "enum": ["auto","property","liability","workers_comp","other"] },
+    "loss_location":      { "type": "string" },
+    "loss_description":   { "type": "string" },
+    "claimant_name":      { "type": "string" },
+    "reported_by":        { "type": "string" },
+    "estimated_severity": { "type": "string", "enum": ["low","medium","high","unknown"] }
+  }
+}

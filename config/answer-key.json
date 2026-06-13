@@ -1,0 +1,179 @@
+{
+  "_comment": "Ground truth for accuracy grading (Gate 6). Dates normalized to ISO; limits numeric. COI 'limit' = the PRIMARY per-occurrence limit only: GL=Each Occurrence, Auto=Combined Single Limit, Umbrella=Each Occurrence, WC=E.L. Each Accident, Professional=Each Claim. Documents intentionally contain DISTRACTORS the model must NOT pick: revision/printed dates, prior-carrier policy numbers, NAIC #s, quote/cert/claim/police-report numbers, additional-insured names, and aggregate sub-limits. Reconciliation natural key: insured_name (COI), policy_number (FNOL).",
+  "accuracy_set": {
+    "COI-1001_Harborview.pdf": {
+      "document_type": "certificate_of_insurance",
+      "producer": "Brightline Insurance Brokers",
+      "insured_name": "Harborview Logistics LLC",
+      "certificate_holder": "Cascade Property Group",
+      "issue_date": "2026-05-14",
+      "coverages": [
+        {
+          "coverage_type": "general_liability",
+          "policy_number": "GL-88421",
+          "effective_date": "2026-01-01",
+          "expiration_date": "2027-01-01",
+          "limit": 2000000
+        },
+        {
+          "coverage_type": "auto_liability",
+          "policy_number": "AL-22310",
+          "effective_date": "2026-01-01",
+          "expiration_date": "2027-01-01",
+          "limit": 1000000
+        }
+      ]
+    },
+    "COI-1002_Sierra.pdf": {
+      "document_type": "certificate_of_insurance",
+      "producer": "Anchor Risk Partners",
+      "insured_name": "Sierra Stoneworks Inc.",
+      "certificate_holder": "Meridian Builders",
+      "issue_date": "2026-04-02",
+      "coverages": [
+        {
+          "coverage_type": "general_liability",
+          "policy_number": "GL-50917",
+          "effective_date": "2025-09-01",
+          "expiration_date": "2026-09-01",
+          "limit": 1000000
+        },
+        {
+          "coverage_type": "umbrella",
+          "policy_number": "UMB-7740",
+          "effective_date": "2025-09-01",
+          "expiration_date": "2026-09-01",
+          "limit": 5000000
+        },
+        {
+          "coverage_type": "workers_comp",
+          "policy_number": "WC-30188",
+          "effective_date": "2025-09-01",
+          "expiration_date": "2026-09-01",
+          "limit": 1000000
+        }
+      ]
+    },
+    "COI-1003_Lumen.pdf": {
+      "document_type": "certificate_of_insurance",
+      "producer": "Brightline Insurance Brokers",
+      "insured_name": "Lumen Tech Services",
+      "certificate_holder": "Northgate Plaza Associates",
+      "issue_date": "2026-06-01",
+      "coverages": [
+        {
+          "coverage_type": "general_liability",
+          "policy_number": "GL-66102",
+          "effective_date": "2026-03-15",
+          "expiration_date": "2027-03-15",
+          "limit": 2000000
+        },
+        {
+          "coverage_type": "professional_liability",
+          "policy_number": "PL-11920",
+          "effective_date": "2026-03-15",
+          "expiration_date": "2027-03-15",
+          "limit": 3000000
+        }
+      ]
+    },
+    "FNOL-2001_Harborview.pdf": {
+      "document_type": "first_notice_of_loss",
+      "policy_number": "POL-44821",
+      "policyholder_name": "Harborview Logistics LLC",
+      "loss_date": "2026-05-30",
+      "report_date": "2026-06-02",
+      "loss_type": "auto",
+      "loss_location": "I-90 near Exit 34, Issaquah WA",
+      "loss_description": "Insured box truck (unit 12) was traveling eastbound and rear-ended a sedan that had stopped suddenly at a signal. Front bumper, hood, and radiator damage to the insured vehicle. The other driver, Dana Whitfield, reported neck stiffness and declined transport at the scene.",
+      "claimant_name": "Dana Whitfield",
+      "reported_by": "Marcus Lee (Fleet Manager)",
+      "estimated_severity": "medium"
+    },
+    "FNOL-2002_Sierra.pdf": {
+      "document_type": "first_notice_of_loss",
+      "policy_number": "POL-90233",
+      "policyholder_name": "Sierra Stoneworks Inc.",
+      "loss_date": "2026-04-18",
+      "report_date": "2026-04-19",
+      "loss_type": "property",
+      "loss_location": "Warehouse B, 1420 Quarry Rd, Tacoma WA",
+      "loss_description": "During a windstorm, a section of the warehouse roof membrane lifted and rainwater entered over the storage bays. Two pallets of finished stone slab, packaging materials, and a forklift battery charger were water-damaged. Standing water was present on the floor the following morning.",
+      "claimant_name": "N/A (first-party)",
+      "reported_by": "Elena Cruz (Site Supervisor)",
+      "estimated_severity": "high"
+    }
+  },
+  "update_expectations": {
+    "COI-1001_Harborview_UPDATED.pdf": {
+      "updates_record_natural_key": "Harborview Logistics LLC",
+      "expected_diff": [
+        {
+          "field": "coverages[general_liability].expiration_date",
+          "from": "2027-01-01",
+          "to": "2027-06-30"
+        },
+        {
+          "field": "coverages[general_liability].limit",
+          "from": 2000000,
+          "to": 3000000
+        },
+        {
+          "field": "issue_date",
+          "from": "2026-05-14",
+          "to": "2026-06-10"
+        }
+      ],
+      "expected_truth": {
+        "document_type": "certificate_of_insurance",
+        "producer": "Brightline Insurance Brokers",
+        "insured_name": "Harborview Logistics LLC",
+        "certificate_holder": "Cascade Property Group",
+        "issue_date": "2026-06-10",
+        "coverages": [
+          {
+            "coverage_type": "general_liability",
+            "policy_number": "GL-88421",
+            "effective_date": "2026-01-01",
+            "expiration_date": "2027-06-30",
+            "limit": 3000000
+          },
+          {
+            "coverage_type": "auto_liability",
+            "policy_number": "AL-22310",
+            "effective_date": "2026-01-01",
+            "expiration_date": "2027-01-01",
+            "limit": 1000000
+          }
+        ]
+      }
+    }
+  },
+  "review_queue_expectations": {
+    "COI-SCAN_Pinecrest.pdf": {
+      "reason": "image-only scan; OCR keeps the header legible but garbles the coverages row (effective_date, expiration_date, limit; policy_number may also degrade). Those fields should fail grounding/confidence and the record should route to /review-queue, not /index.",
+      "expected_low_confidence_fields": [
+        "coverages[0].effective_date",
+        "coverages[0].expiration_date",
+        "coverages[0].limit",
+        "coverages[0].policy_number"
+      ],
+      "truth_if_human_confirms": {
+        "document_type": "certificate_of_insurance",
+        "producer": "Anchor Risk Partners",
+        "insured_name": "Pinecrest Catering Co.",
+        "certificate_holder": "Evently Venues LLC",
+        "issue_date": "2026-05-20",
+        "coverages": [
+          {
+            "coverage_type": "general_liability",
+            "policy_number": "GL-77345",
+            "effective_date": "2026-02-01",
+            "expiration_date": "2027-02-01",
+            "limit": 1000000
+          }
+        ]
+      }
+    }
+  }
+}
