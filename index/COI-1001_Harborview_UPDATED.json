@@ -1,0 +1,190 @@
+{
+  "doc_id": "COI-1001_Harborview_UPDATED",
+  "source_pdf": "inbox/COI-1001_Harborview_UPDATED.pdf",
+  "schema_title": "CertificateOfInsurance",
+  "attempts": 1,
+  "extraction": {
+    "document_type": {
+      "value": "certificate_of_insurance",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+      },
+      "needs_review": false
+    },
+    "producer": {
+      "value": "Brightline Insurance Brokers",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "PRODUCER INSURED\nBrightline Insurance Brokers"
+      },
+      "needs_review": false
+    },
+    "insured_name": {
+      "value": "Harborview Logistics LLC",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "Brightline Insurance Brokers Harborview Logistics LLC"
+      },
+      "needs_review": false
+    },
+    "certificate_holder": {
+      "value": "Cascade Property Group",
+      "confidence": 0.98,
+      "source": {
+        "page": 2,
+        "text_span": "CERTIFICATE HOLDER\nCascade Property Group"
+      },
+      "needs_review": false
+    },
+    "issue_date": {
+      "value": "2026-06-10",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "DATE ISSUED (MM/DD/YYYY): 06/10/2026"
+      },
+      "needs_review": false
+    },
+    "coverages": [
+      {
+        "coverage_type": {
+          "value": "general_liability",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "COMMERCIAL GENERAL LIABILITY"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "GL-88421",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: GL-88421"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2026-01-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2027-06-30",
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 06/30/2027"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 3000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Each Occurrence: $3,000,000"
+          },
+          "needs_review": false
+        }
+      },
+      {
+        "coverage_type": {
+          "value": "auto_liability",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "AUTOMOBILE LIABILITY"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "AL-22310",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: AL-22310"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2026-01-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 01/01/2026"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2027-01-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 01/01/2027"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 1000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Combined Single Limit: $1,000,000"
+          },
+          "needs_review": false
+        }
+      }
+    ]
+  },
+  "prior": {
+    "document_type": "certificate_of_insurance",
+    "producer": "Brightline Insurance Brokers",
+    "insured_name": "Harborview Logistics LLC",
+    "certificate_holder": "Cascade Property Group",
+    "issue_date": "2026-05-14",
+    "coverages": [
+      {
+        "coverage_type": "general_liability",
+        "policy_number": "GL-88421",
+        "effective_date": "2026-01-01",
+        "expiration_date": "2027-01-01",
+        "limit": 2000000
+      },
+      {
+        "coverage_type": "auto_liability",
+        "policy_number": "AL-22310",
+        "effective_date": "2026-01-01",
+        "expiration_date": "2027-01-01",
+        "limit": 1000000
+      }
+    ]
+  },
+  "prior_doc_id": "COI-1001_Harborview",
+  "diff": [
+    {
+      "field": "coverages[general_liability].expiration_date",
+      "from": "2027-01-01",
+      "to": "2027-06-30"
+    },
+    {
+      "field": "coverages[general_liability].limit",
+      "from": 2000000,
+      "to": 3000000
+    },
+    {
+      "field": "issue_date",
+      "from": "2026-05-14",
+      "to": "2026-06-10"
+    }
+  ]
+}

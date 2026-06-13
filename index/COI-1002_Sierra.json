@@ -1,0 +1,196 @@
+{
+  "doc_id": "COI-1002_Sierra",
+  "source_pdf": "inbox/COI-1002_Sierra.pdf",
+  "schema_title": "CertificateOfInsurance",
+  "attempts": 1,
+  "extraction": {
+    "document_type": {
+      "value": "certificate_of_insurance",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+      },
+      "needs_review": false
+    },
+    "producer": {
+      "value": "Anchor Risk Partners",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "PRODUCER INSURED\nAnchor Risk Partners Sierra Stoneworks Inc."
+      },
+      "needs_review": false
+    },
+    "insured_name": {
+      "value": "Sierra Stoneworks Inc.",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "Anchor Risk Partners Sierra Stoneworks Inc."
+      },
+      "needs_review": false
+    },
+    "certificate_holder": {
+      "value": "Meridian Builders",
+      "confidence": 0.97,
+      "source": {
+        "page": 2,
+        "text_span": "CERTIFICATE HOLDER\nMeridian Builders"
+      },
+      "needs_review": false
+    },
+    "issue_date": {
+      "value": "2026-04-02",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "DATE ISSUED (MM/DD/YYYY): 04/02/2026"
+      },
+      "needs_review": false
+    },
+    "coverages": [
+      {
+        "coverage_type": {
+          "value": "general_liability",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "COMMERCIAL GENERAL LIABILITY"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "GL-50917",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: GL-50917"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2025-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2026-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 1000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Each Occurrence: $1,000,000"
+          },
+          "needs_review": false
+        }
+      },
+      {
+        "coverage_type": {
+          "value": "umbrella",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "UMBRELLA / EXCESS LIAB"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "UMB-7740",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: UMB-7740"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2025-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2026-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 5000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Each Occurrence: $5,000,000"
+          },
+          "needs_review": false
+        }
+      },
+      {
+        "coverage_type": {
+          "value": "workers_comp",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "WORKERS COMPENSATION AND EMPLOYERS' LIABILITY"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "WC-30188",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: WC-30188"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2025-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 09/01/2025"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2026-09-01",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 09/01/2026"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 1000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "E.L. Each Accident: $1,000,000"
+          },
+          "needs_review": false
+        }
+      }
+    ]
+  }
+}

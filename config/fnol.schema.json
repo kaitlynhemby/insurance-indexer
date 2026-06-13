@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "FirstNoticeOfLoss",
+  "x_natural_key": "policy_number",
   "type": "object",
   "required": ["document_type", "policy_number", "loss_date", "loss_description", "reported_by"],
   "properties": {

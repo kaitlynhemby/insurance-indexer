@@ -1,0 +1,107 @@
+{
+  "doc_id": "FNOL-2002_Sierra",
+  "source_pdf": "inbox/FNOL-2002_Sierra.pdf",
+  "schema_title": "FirstNoticeOfLoss",
+  "attempts": 2,
+  "extraction": {
+    "document_type": {
+      "value": "first_notice_of_loss",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "PROPERTY & CASUALTY - FIRST NOTICE OF LOSS (FNOL)"
+      },
+      "needs_review": false
+    },
+    "policy_number": {
+      "value": "POL-90233",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "Policy Number: POL-90233"
+      },
+      "needs_review": false
+    },
+    "policyholder_name": {
+      "value": "Sierra Stoneworks Inc.",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "Policyholder / Named Insured: Sierra Stoneworks Inc."
+      },
+      "needs_review": false
+    },
+    "loss_date": {
+      "value": "2026-04-18",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "Date of Loss (MM/DD/YYYY): 04/18/2026"
+      },
+      "needs_review": false
+    },
+    "report_date": {
+      "value": "2026-04-19",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "Date Reported (MM/DD/YYYY): 04/19/2026"
+      },
+      "needs_review": false
+    },
+    "loss_type": {
+      "value": "property",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "Type of Loss: Property - Water Damage"
+      },
+      "needs_review": false
+    },
+    "loss_location": {
+      "value": "Warehouse B, 1420 Quarry Rd, Tacoma WA",
+      "confidence": 0.97,
+      "source": {
+        "page": 2,
+        "text_span": "Loss Location: Warehouse B, 1420 Quarry Rd, Tacoma WA"
+      },
+      "needs_review": false
+    },
+    "loss_description": {
+      "value": "During a windstorm, a section of the warehouse roof membrane lifted and rainwater entered over the storage bays. Two pallets of finished stone slab, packaging materials, and a forklift battery charger were water-damaged. Standing water was present on the floor the following morning.",
+      "confidence": 0.95,
+      "source": {
+        "page": 2,
+        "text_span": "During a windstorm, a section of the warehouse roof membrane lifted and rainwater entered over the storage bays. Two pallets of finished stone slab,\npackaging materials, and a forklift battery charger were water-damaged. Standing water was present on the floor the following morning."
+      },
+      "needs_review": false
+    },
+    "claimant_name": {
+      "value": "N/A (first-party)",
+      "confidence": 0.96,
+      "source": {
+        "page": 2,
+        "text_span": "Claimant Name: N/A (first-party)"
+      },
+      "needs_review": false
+    },
+    "reported_by": {
+      "value": "Elena Cruz (Site Supervisor)",
+      "confidence": 0.97,
+      "source": {
+        "page": 2,
+        "text_span": "Reported By: Elena Cruz (Site Supervisor)"
+      },
+      "needs_review": false
+    },
+    "estimated_severity": {
+      "value": "high",
+      "confidence": 0.97,
+      "source": {
+        "page": 2,
+        "text_span": "Estimated Severity: High"
+      },
+      "needs_review": false
+    }
+  }
+}

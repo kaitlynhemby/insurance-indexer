@@ -29,6 +29,26 @@ import pdftext
 import schema_util as S
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_dotenv() -> None:
+    """Minimal .env loader (no dependency). Sets vars not already in the env,
+    so the optional ANTHROPIC_API_KEY path activates without exporting it."""
+    path = os.path.join(ROOT, ".env")
+    if not os.path.exists(path):
+        return
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key, val = key.strip(), val.strip().strip('"').strip("'")
+            if key and val and key not in os.environ:
+                os.environ[key] = val
+
+
+_load_dotenv()
 MODEL = os.environ.get("INDEXER_MODEL", "claude-opus-4-8")
 CLI_TIMEOUT = int(os.environ.get("INDEXER_CLI_TIMEOUT", "300"))
 
@@ -180,9 +200,11 @@ def _call_api(user: str, system: str) -> dict:
     import anthropic  # type: ignore
 
     client = anthropic.Anthropic()
+    # Opus 4.8: adaptive thinking only; temperature/top_p/top_k are rejected (400).
+    # 8192 leaves room for the long FNOL loss_description plus every field's span.
     msg = client.messages.create(
         model=MODEL,
-        max_tokens=4096,
+        max_tokens=8192,
         system=system,
         messages=[{"role": "user", "content": user}],
     )

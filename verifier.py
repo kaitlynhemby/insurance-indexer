@@ -48,6 +48,27 @@ def _active_schema() -> dict:
     return S.load_schema(os.path.join(ROOT, "config", "active.schema.json"))
 
 
+def _schemas_by_title() -> Dict[str, dict]:
+    """Map every canonical schema's title -> schema (config/*.schema.json,
+    excluding the active copy). Lets a record be graded against the schema it
+    was extracted under, so a mixed COI+FNOL index validates correctly."""
+    reg: Dict[str, dict] = {}
+    for p in glob.glob(os.path.join(ROOT, "config", "*.schema.json")):
+        if os.path.basename(p) == "active.schema.json":
+            continue
+        schema = S.load_schema(p)
+        if schema.get("title"):
+            reg[schema["title"]] = schema
+    return reg
+
+
+def _schema_for_record(record: dict, default: dict) -> dict:
+    title = record.get("schema_title")
+    if title:
+        return _schemas_by_title().get(title, default)
+    return default
+
+
 def _doc_key(record: dict) -> str:
     """Answer-key key, e.g. 'COI-1001_Harborview.pdf'."""
     return os.path.basename(record.get("source_pdf", record["doc_id"] + ".pdf"))
@@ -263,6 +284,7 @@ def _normalize_diff(diff: List[dict]):
 # --------------------------------------------------------------------------
 def grade_record(record_path: str, answer_key: dict, active: dict) -> dict:
     record = _load_json(record_path)
+    active = _schema_for_record(record, active)  # grade against the record's own schema
     status = "review" if os.sep + "review-queue" + os.sep in os.path.abspath(record_path) else "indexed"
     env = record["extraction"]
     pdf_path = os.path.join(ROOT, record["source_pdf"])
@@ -283,13 +305,51 @@ def grade_record(record_path: str, answer_key: dict, active: dict) -> dict:
     gates["6_accuracy"] = ("pass" if g6 else "fail") if applic6 else "n/a"
 
     passed = g1 and g2 and g3 and g4 and (g5 or not applic5) and (g6 or not applic6)
+
+    # Run-acceptance. Indexed records must pass EVERY gate. A review-queue record
+    # is explicitly NOT asserted as final — an illegible required field is the
+    # reason it's queued — so it is held to a routing bar (grounding + routing +
+    # no-fabrication + expected fields flagged), not full schema conformance.
+    if status == "indexed":
+        run_ok = passed
+    else:
+        review_ok = _review_expectations_ok(record, env, active, answer_key, reasons)
+        run_ok = g1 and g3 and g4 and (g5 or not applic5) and review_ok
+
     return {
         "doc_id": record["doc_id"],
         "status": status,
         "gates": gates,
         "pass": passed,
+        "run_ok": run_ok,
         "reasons": reasons,
     }
+
+
+def _review_expectations_ok(record, env, active, answer_key, reasons) -> bool:
+    """For a labeled scan, confirm the fields the answer key expects to degrade
+    are actually flagged needs_review (so the routing is provably correct)."""
+    exp = answer_key.get("review_queue_expectations", {}).get(_doc_key(record))
+    if not exp:
+        return True
+    flagged = set()
+    for path, w, _k in S.iter_fields(env, active):
+        conf = w.get("confidence")
+        if (
+            w.get("needs_review")
+            or w.get("value") is None
+            or (isinstance(conf, (int, float)) and conf < CONF_THRESHOLD)
+        ):
+            flagged.add(path)
+    ok = True
+    for field in exp.get("expected_low_confidence_fields", []):
+        if field not in flagged:
+            ok = False
+            reasons.append(
+                f"REVIEW {_doc_key(record)}: expected-degraded field {field} was not "
+                f"flagged needs_review (flagged: {sorted(flagged)})"
+            )
+    return ok
 
 
 def run(verbose: bool = True) -> dict:
@@ -308,7 +368,7 @@ def run(verbose: bool = True) -> dict:
     }
     missing = [k for k in answer_key.get("accuracy_set", {}) if k not in indexed_keys]
 
-    run_pass = all(r["pass"] for r in reports) and not missing and bool(reports)
+    run_pass = all(r["run_ok"] for r in reports) and not missing and bool(reports)
 
     if verbose:
         _print_report(reports, missing, run_pass)
@@ -320,9 +380,9 @@ def _print_report(reports, missing, run_pass):
     print("VERIFIER REPORT  (verifier-rubric.md)")
     print("=" * 72)
     for r in reports:
-        mark = "PASS" if r["pass"] else "FAIL"
+        mark = "PASS" if r["pass"] else ("QUEUED" if r["run_ok"] else "FAIL")
         gates = "  ".join(f"{k.split('_')[0]}:{v}" for k, v in r["gates"].items())
-        print(f"[{mark}] {r['doc_id']:<28} ({r['status']})  {gates}")
+        print(f"[{mark:<6}] {r['doc_id']:<30} ({r['status']})  {gates}")
         for reason in r["reasons"]:
             print(f"        - {reason}")
     if missing:
@@ -341,7 +401,7 @@ def main():
     if args.record:
         result = grade_record(args.record, _answer_key(), _active_schema())
         print(json.dumps(result, indent=2))
-        sys.exit(0 if result["pass"] else 1)
+        sys.exit(0 if result["run_ok"] else 1)
 
     result = run(verbose=not args.json)
     if args.json:

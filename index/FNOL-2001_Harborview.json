@@ -1,0 +1,107 @@
+{
+  "doc_id": "FNOL-2001_Harborview",
+  "source_pdf": "inbox/FNOL-2001_Harborview.pdf",
+  "schema_title": "FirstNoticeOfLoss",
+  "attempts": 2,
+  "extraction": {
+    "document_type": {
+      "value": "first_notice_of_loss",
+      "confidence": 1.0,
+      "source": {
+        "page": 1,
+        "text_span": "PROPERTY & CASUALTY - FIRST NOTICE OF LOSS (FNOL)"
+      },
+      "needs_review": false
+    },
+    "policy_number": {
+      "value": "POL-44821",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "Policy Number: POL-44821"
+      },
+      "needs_review": false
+    },
+    "policyholder_name": {
+      "value": "Harborview Logistics LLC",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "Policyholder / Named Insured: Harborview Logistics LLC"
+      },
+      "needs_review": false
+    },
+    "loss_date": {
+      "value": "2026-05-30",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "Date of Loss (MM/DD/YYYY): 05/30/2026"
+      },
+      "needs_review": false
+    },
+    "report_date": {
+      "value": "2026-06-02",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "Date Reported (MM/DD/YYYY): 06/02/2026"
+      },
+      "needs_review": false
+    },
+    "loss_type": {
+      "value": "auto",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "Type of Loss: Auto - Collision"
+      },
+      "needs_review": false
+    },
+    "loss_location": {
+      "value": "I-90 near Exit 34, Issaquah WA",
+      "confidence": 0.98,
+      "source": {
+        "page": 2,
+        "text_span": "Loss Location: I-90 near Exit 34, Issaquah WA"
+      },
+      "needs_review": false
+    },
+    "loss_description": {
+      "value": "Insured box truck (unit 12) was traveling eastbound and rear-ended a sedan that had stopped suddenly at a signal. Front bumper, hood, and radiator damage to the insured vehicle. The other driver, Dana Whitfield, reported neck stiffness and declined transport at the scene.",
+      "confidence": 0.95,
+      "source": {
+        "page": 2,
+        "text_span": "Insured box truck (unit 12) was traveling eastbound and rear-ended a sedan that had stopped suddenly at a signal. Front bumper, hood, and radiator\ndamage to the insured vehicle. The other driver, Dana Whitfield, reported neck stiffness and declined transport at the scene."
+      },
+      "needs_review": false
+    },
+    "claimant_name": {
+      "value": "Dana Whitfield",
+      "confidence": 0.99,
+      "source": {
+        "page": 2,
+        "text_span": "Claimant Name: Dana Whitfield"
+      },
+      "needs_review": false
+    },
+    "reported_by": {
+      "value": "Marcus Lee (Fleet Manager)",
+      "confidence": 0.98,
+      "source": {
+        "page": 2,
+        "text_span": "Reported By: Marcus Lee (Fleet Manager)"
+      },
+      "needs_review": false
+    },
+    "estimated_severity": {
+      "value": "medium",
+      "confidence": 0.98,
+      "source": {
+        "page": 2,
+        "text_span": "Estimated Severity: Medium"
+      },
+      "needs_review": false
+    }
+  }
+}

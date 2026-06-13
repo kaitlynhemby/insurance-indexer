@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CertificateOfInsurance",
+  "x_natural_key": "insured_name",
   "type": "object",
   "required": ["document_type", "insured_name", "certificate_holder", "issue_date", "coverages"],
   "properties": {

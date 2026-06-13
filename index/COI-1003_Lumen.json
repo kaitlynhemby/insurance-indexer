@@ -1,0 +1,149 @@
+{
+  "doc_id": "COI-1003_Lumen",
+  "source_pdf": "inbox/COI-1003_Lumen.pdf",
+  "schema_title": "CertificateOfInsurance",
+  "attempts": 1,
+  "extraction": {
+    "document_type": {
+      "value": "certificate_of_insurance",
+      "confidence": 0.99,
+      "source": {
+        "page": 1,
+        "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+      },
+      "needs_review": false
+    },
+    "producer": {
+      "value": "Brightline Insurance Brokers",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "PRODUCER INSURED\nBrightline Insurance Brokers"
+      },
+      "needs_review": false
+    },
+    "insured_name": {
+      "value": "Lumen Tech Services",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "Lumen Tech Services"
+      },
+      "needs_review": false
+    },
+    "certificate_holder": {
+      "value": "Northgate Plaza Associates",
+      "confidence": 0.97,
+      "source": {
+        "page": 2,
+        "text_span": "CERTIFICATE HOLDER\nNorthgate Plaza Associates"
+      },
+      "needs_review": false
+    },
+    "issue_date": {
+      "value": "2026-06-01",
+      "confidence": 0.97,
+      "source": {
+        "page": 1,
+        "text_span": "DATE ISSUED (MM/DD/YYYY): 06/01/2026"
+      },
+      "needs_review": false
+    },
+    "coverages": [
+      {
+        "coverage_type": {
+          "value": "general_liability",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "COMMERCIAL GENERAL LIABILITY"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "GL-66102",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: GL-66102"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2026-03-15",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 03/15/2026"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2027-03-15",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 03/15/2027"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 2000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Each Occurrence: $2,000,000"
+          },
+          "needs_review": false
+        }
+      },
+      {
+        "coverage_type": {
+          "value": "professional_liability",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "PROFESSIONAL LIABILITY (E&O)"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "PL-11920",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY NUMBER: PL-11920"
+          },
+          "needs_review": false
+        },
+        "effective_date": {
+          "value": "2026-03-15",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EFF (MM/DD/YYYY): 03/15/2026"
+          },
+          "needs_review": false
+        },
+        "expiration_date": {
+          "value": "2027-03-15",
+          "confidence": 0.98,
+          "source": {
+            "page": 1,
+            "text_span": "POLICY EXP (MM/DD/YYYY): 03/15/2027"
+          },
+          "needs_review": false
+        },
+        "limit": {
+          "value": 3000000,
+          "confidence": 0.97,
+          "source": {
+            "page": 1,
+            "text_span": "Each Claim: $3,000,000"
+          },
+          "needs_review": false
+        }
+      }
+    ]
+  }
+}

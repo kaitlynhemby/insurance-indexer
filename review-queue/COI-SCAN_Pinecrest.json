@@ -1,0 +1,102 @@
+{
+  "doc_id": "COI-SCAN_Pinecrest",
+  "source_pdf": "inbox/COI-SCAN_Pinecrest.pdf",
+  "schema_title": "CertificateOfInsurance",
+  "attempts": 2,
+  "extraction": {
+    "document_type": {
+      "value": "certificate_of_insurance",
+      "confidence": 0.98,
+      "source": {
+        "page": 1,
+        "text_span": "CERTIFICATE OF LIABILITY INSURANCE"
+      },
+      "needs_review": false
+    },
+    "producer": {
+      "value": "Anchor Risk Partners",
+      "confidence": 0.95,
+      "source": {
+        "page": 1,
+        "text_span": "PRODUCER: Anchor Risk Partners"
+      },
+      "needs_review": false
+    },
+    "insured_name": {
+      "value": "Pinecrest Catering Co.",
+      "confidence": 0.95,
+      "source": {
+        "page": 1,
+        "text_span": "INSURED: Pinecrest Catering Co."
+      },
+      "needs_review": false
+    },
+    "certificate_holder": {
+      "value": "Evently Venues LLC",
+      "confidence": 0.92,
+      "source": {
+        "page": 1,
+        "text_span": "CERTIFICATE HOLDER: Evently Venues LLC"
+      },
+      "needs_review": false
+    },
+    "issue_date": {
+      "value": null,
+      "confidence": 0.2,
+      "source": {
+        "page": 1,
+        "text_span": "DATE ISSUED: OW20/2026"
+      },
+      "needs_review": true
+    },
+    "coverages": [
+      {
+        "coverage_type": {
+          "value": "general_liability",
+          "confidence": 0.9,
+          "source": {
+            "page": 1,
+            "text_span": "Commercial GGen't Liab"
+          },
+          "needs_review": false
+        },
+        "policy_number": {
+          "value": "GL-77345",
+          "confidence": 0.55,
+          "source": {
+            "page": 1,
+            "text_span": "GL-77345 SEQ GET Hh ceeee"
+          },
+          "needs_review": true
+        },
+        "effective_date": {
+          "value": null,
+          "confidence": 0.1,
+          "source": {
+            "page": 1,
+            "text_span": "GL-77345 SEQ GET Hh ceeee"
+          },
+          "needs_review": true
+        },
+        "expiration_date": {
+          "value": null,
+          "confidence": 0.1,
+          "source": {
+            "page": 1,
+            "text_span": "GL-77345 SEQ GET Hh ceeee"
+          },
+          "needs_review": true
+        },
+        "limit": {
+          "value": null,
+          "confidence": 0.3,
+          "source": {
+            "page": 1,
+            "text_span": "Hach Occurrence $1.000.000"
+          },
+          "needs_review": true
+        }
+      }
+    ]
+  }
+}

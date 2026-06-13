@@ -148,7 +148,9 @@ def process_doc(pdf_path: str, force: bool = False, verbose: bool = True) -> dic
         # A clean, labeled doc routed to review-queue is itself a miss: push to retry.
         forced_review_miss = is_labeled and status == "review"
 
-        if report["pass"] and not forced_review_miss:
+        # run_ok accepts a correctly-queued review record (grounded, flagged) even
+        # though its illegible required fields keep strict `pass` False.
+        if report["run_ok"] and not forced_review_miss:
             if verbose:
                 gates = "  ".join(f"{k.split('_')[0]}:{v}" for k, v in report["gates"].items())
                 print(f"  [{status.upper()}] {doc_id}  {gates}")
@@ -235,9 +237,9 @@ def run_once(doc: Optional[str], force: bool) -> bool:
     for pdf in _pdfs(doc):
         print(f"\n• {os.path.basename(pdf)}")
         reports.append(process_doc(pdf, force=force))
-    ok = all(r.get("pass") for r in reports)
+    ok = all(r.get("run_ok", r.get("pass")) for r in reports)
     print("\n" + "-" * 72)
-    print(f"processed {len(reports)} doc(s); {'all passed' if ok else 'some FAILED'}")
+    print(f"processed {len(reports)} doc(s); {'all passed / correctly queued' if ok else 'some FAILED'}")
     print("Run `python verifier.py` to grade the committed index/ + review-queue/.")
     return ok
 
