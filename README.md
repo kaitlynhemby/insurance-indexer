@@ -2,6 +2,8 @@
 
 Built during the Build Day event using **Claude Code + Claude Opus 4.8**.
 
+**🔗 Live record viewer:** https://viewer-puce-phi.vercel.app — the verified index, each field beside its source span, the verifier's gate report, and the reconciliation diff.
+
 **What it does:** turns emailed insurance PDFs (certificates of insurance, first-notice-of-loss packets) into structured, verified records. Every field traces back to its source span, low-confidence fields route themselves to a human review queue, the index updates and re-verifies as new documents arrive, and a single config file re-targets the whole pipeline to any insurance document type.
 
 ## Original work statement
@@ -36,6 +38,8 @@ python workflow.py --watch  # or watch inbox/ continuously and index documents a
 python verifier.py          # independent grader; exits 0 when DONE
 python viewer.py --serve    # thin record viewer at http://localhost:8000 (source span per field, verifier report, diff)
 ```
+
+**Deploy the viewer** (static, no build): `viewer.py` writes a self-contained `viewer/index.html`. It's deployed to Vercel at the live URL above via `vercel deploy ./viewer --prod`. To redeploy after re-indexing: `python viewer.py` then `vercel deploy ./viewer --prod --scope <your-scope>`.
 
 The model is invoked **per document** by `workflow.py`. By default it uses the local
 `claude` CLI (no API key — same login as Claude Code). To use the Anthropic API instead

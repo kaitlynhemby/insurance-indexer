@@ -6,3 +6,4 @@ __pycache__/
 .work/
 .remember/
 viewer/*.png
+.vercel/
