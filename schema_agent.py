@@ -280,13 +280,18 @@ def _resolve_decisions(replies: List[dict]) -> List[dict]:
         SUPPORTED_SHAPE_RULES,
         "",
         'Return ONE JSON object {"decisions": [ {"field_name": <original>, "confirmed": <bool>, '
-        '"name": <snake_case field name to use>, "leaf": <final scalar leaf schema> } ]} — one per '
-        "item, in the same order.",
-        "Rules: confirmed=true only if the reply affirms capturing the field (yes/sure/please/etc.); "
+        '"name": <snake_case field name to use>, "leaf": <final scalar leaf schema>, '
+        '"extra": [ {"name": <snake_case>, "leaf": <scalar leaf schema>} ] } ]} — one per item, in '
+        "the same order.",
+        "Rules: confirmed=true only if the reply affirms capturing the asked field (yes/sure/please/etc.); "
         "false for no/skip/unclear/empty. If the insurer asked to RENAME or RELABEL it (e.g. "
         "'yes, call it effective date'), set name to a snake_case version of the requested label "
         "('effective_date'); otherwise name = field_name. If they asked for a different TYPE/FORMAT "
         "(e.g. 'make it a date', 'as a number'), adjust leaf (scalar only); otherwise leaf = proposed.",
+        "ALSO: if the reply asks to ALSO capture a SEPARATE NEW field beyond the one asked about "
+        "(e.g. 'yes, and also add a workflow tag'), put each such new field in `extra` with a "
+        "snake_case name and a scalar leaf schema. `extra` is [] when none are requested. Do NOT put "
+        "the asked field itself in extra.",
     ])
     decs = None
     try:
@@ -295,6 +300,17 @@ def _resolve_decisions(replies: List[dict]) -> List[dict]:
             decs = obj["decisions"]
     except Exception as exc:
         print(f"  [interpret] model interpretation unavailable ({exc}); using yes/no fallback")
+
+    def _clean_extras(raw) -> List[dict]:
+        extras = []
+        for e in raw or []:
+            if not isinstance(e, dict):
+                continue
+            leaf = e.get("leaf") if _leaf_supported(e.get("leaf")) else {"type": "string"}
+            name = _sanitize_field(e.get("name") or "")
+            if name:
+                extras.append({"name": name, "leaf": leaf})
+        return extras
 
     out: List[dict] = []
     by_orig = {r.get("field_name"): r for r in replies}
@@ -310,8 +326,9 @@ def _resolve_decisions(replies: List[dict]) -> List[dict]:
                 "confirmed": bool(d.get("confirmed")),
                 "name": _sanitize_field(d.get("name") or orig or "field"),
                 "leaf": leaf,
+                "extra": _clean_extras(d.get("extra")),
             })
-    else:  # deterministic fallback
+    else:  # deterministic fallback (no new-field extraction without the model)
         for r in replies:
             reply = r.get("reply", "")
             renamed = _extract_rename(reply) if _affirmative(reply) else None
@@ -321,11 +338,13 @@ def _resolve_decisions(replies: List[dict]) -> List[dict]:
                 "confirmed": _affirmative(reply),
                 "name": _sanitize_field(renamed or r.get("field_name") or "field"),
                 "leaf": leaf if _leaf_supported(leaf) else {"type": "string"},
+                "extra": [],
             })
 
     for d in out:
         rename = f" → {d['name']}" if d["name"] != d["original"] else ""
-        print(f"  [{'add ' if d['confirmed'] else 'skip'}] {d['original']}{rename}")
+        extras = ("  + " + ", ".join(e["name"] for e in d["extra"])) if d["extra"] else ""
+        print(f"  [{'add ' if d['confirmed'] else 'skip'}] {d['original']}{rename}{extras}")
     return out
 
 
@@ -349,6 +368,10 @@ def _apply(base_schema: dict, decisions: List[dict]) -> dict:
             props.pop(orig, None)
             if orig in required:
                 required.remove(orig)
+        # new fields the insurer requested in this reply (added as OPTIONAL)
+        for e in d.get("extra", []):
+            if _leaf_supported(e["leaf"]) and e["name"] not in props:
+                props[e["name"]] = e["leaf"]
     return final
 
 
