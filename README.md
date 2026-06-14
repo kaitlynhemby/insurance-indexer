@@ -65,3 +65,6 @@ python schema_agent.py review --samples <dir-of-pdfs> --channel console
 
 ## "Done" is verifiable without a human
 `verifier.py` exits `0` on the labeled held-out set: 100% grounded, 100% schema-valid, accuracy == 100%, and every low-confidence field correctly routed to `review-queue/`. Re-target to a new document type by replacing `config/active.schema.json` — no code change.
+
+## License
+Released under the [MIT License](LICENSE). The document corpus is synthetic and fictional.
